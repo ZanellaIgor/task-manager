@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.WebHost.UseUrls("http://localhost:5000");
+var frontendOrigin = builder.Configuration["Frontend:Origin"]?.TrimEnd('/');
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -22,9 +21,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod());
+    {
+        if (!string.IsNullOrWhiteSpace(frontendOrigin))
+        {
+            policy.WithOrigins(frontendOrigin)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    });
 });
 
 var app = builder.Build();

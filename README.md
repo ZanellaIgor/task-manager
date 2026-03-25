@@ -92,6 +92,53 @@ URLs:
 - Backend: `http://localhost:5000`
 - Swagger: `http://localhost:5000/swagger`
 
+### Configuração de ambiente
+
+O backend e o frontend não dependem mais de URL e CORS fixos em código.
+
+Arquivos de exemplo:
+
+- Backend: `backend/TaskManager.Api/appsettings.example.json`
+- Frontend: `frontend/.env.example`
+
+Configuração padrão do backend em `backend/TaskManager.Api/appsettings.json`:
+
+```json
+{
+  "Urls": "http://localhost:5000",
+  "ConnectionStrings": {
+    "Default": "Data Source=TaskManager.db"
+  },
+  "Frontend": {
+    "Origin": "http://localhost:5173"
+  }
+}
+```
+
+Variáveis de ambiente úteis:
+
+- `ASPNETCORE_ENVIRONMENT`: define o ambiente do ASP.NET Core, por exemplo `Development` ou `Production`.
+- `ASPNETCORE_URLS`: sobrescreve a URL de escuta da API, por exemplo `http://localhost:5050`.
+- `ConnectionStrings__Default`: sobrescreve a connection string usada pelo EF Core.
+- `Frontend__Origin`: define a origem permitida no CORS para o frontend, por exemplo `http://localhost:5173`.
+- `VITE_API_URL`: define a base URL consumida pelo frontend, por exemplo `http://localhost:5000/api`.
+
+Exemplo de backend com variáveis de ambiente no PowerShell:
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+$env:ASPNETCORE_URLS = "http://localhost:5050"
+$env:ConnectionStrings__Default = "Data Source=TaskManager.db"
+$env:Frontend__Origin = "http://127.0.0.1:5173"
+dotnet run --project .\backend\TaskManager.Api\TaskManager.Api.csproj
+```
+
+Exemplo de `.env` no frontend:
+
+```dotenv
+VITE_API_URL=http://localhost:5050/api
+```
+
 ### Rodar manualmente
 
 ### Backend
@@ -104,7 +151,8 @@ dotnet restore TaskManager.sln
 dotnet run --project .\TaskManager.Api\TaskManager.Api.csproj
 ```
 
-A API sobe em `http://localhost:5000`.
+A API sobe na URL definida por `Urls` em `appsettings.json`, `launchSettings.json` ou `ASPNETCORE_URLS`.
+No padrão deste repositório, ela sobe em `http://localhost:5000`.
 
 Swagger:
 
@@ -135,6 +183,8 @@ Aplicação:
 ```text
 http://localhost:5173
 ```
+
+Crie `frontend/.env` a partir de `frontend/.env.example` se quiser apontar explicitamente para outra API.
 
 Por padrão, o frontend consome:
 
@@ -223,6 +273,6 @@ dotnet ef migrations add NomeDaMigration --project .\TaskManager.Infrastructure\
 
 ## Observações
 
-- O backend está configurado com CORS para `http://localhost:5173`.
+- O CORS do backend usa `Frontend:Origin` no `appsettings` ou `Frontend__Origin` em variável de ambiente.
 - O frontend foi ajustado para ocultar categorias inativas no formulário de tarefa.
 - O backend expõe `PATCH /api/categories/{id}/activate` para compatibilidade com a UI atual.

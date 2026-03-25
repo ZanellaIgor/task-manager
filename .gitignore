@@ -14,6 +14,7 @@ dist-ssr/
 **/obj/
 .run/
 backend/TaskManager.Api/TaskManager.db
+backend/TaskManager.sln
 *.db-wal
 *.db-shm
 *.local
