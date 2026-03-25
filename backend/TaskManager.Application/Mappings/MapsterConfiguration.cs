@@ -2,11 +2,10 @@ using Mapster;
 using TaskManager.Application.DTOs.Categories;
 using TaskManager.Application.DTOs.Tasks;
 using TaskManager.Domain.Entities;
-using TaskPriority = TaskManager.Domain.Enums.TaskPriority;
 
 namespace TaskManager.Application.Mappings;
 
-internal static class MapsterConfiguration
+public static class MapsterConfiguration
 {
     private static int _configured;
 
@@ -21,14 +20,14 @@ internal static class MapsterConfiguration
             .Map(dest => dest.Title, src => src.Title.Trim())
             .Map(dest => dest.Description, src => src.Description)
             .Map(dest => dest.CategoryId, src => src.CategoryId)
-            .Map(dest => dest.Priority, src => Enum.Parse<TaskPriority>(src.Priority.Trim(), true))
+            .Map(dest => dest.Priority, src => src.Priority)
             .Map(dest => dest.DueDate, src => src.DueDate);
 
         TypeAdapterConfig.GlobalSettings.NewConfig<UpdateTaskDto, TaskItem>()
             .Map(dest => dest.Title, src => src.Title.Trim())
             .Map(dest => dest.Description, src => src.Description)
             .Map(dest => dest.CategoryId, src => src.CategoryId)
-            .Map(dest => dest.Priority, src => Enum.Parse<TaskPriority>(src.Priority.Trim(), true))
+            .Map(dest => dest.Priority, src => src.Priority)
             .Map(dest => dest.DueDate, src => src.DueDate);
 
         TypeAdapterConfig.GlobalSettings.NewConfig<CreateCategoryDto, Category>()
@@ -45,8 +44,6 @@ internal static class MapsterConfiguration
         TypeAdapterConfig.GlobalSettings.NewConfig<Category, CategoryDto>();
 
         TypeAdapterConfig.GlobalSettings.NewConfig<TaskItem, TaskDto>()
-            .Map(dest => dest.Status, src => src.Status.ToString())
-            .Map(dest => dest.Priority, src => src.Priority.ToString())
             .Map(dest => dest.Category, src => src.Category);
     }
 }

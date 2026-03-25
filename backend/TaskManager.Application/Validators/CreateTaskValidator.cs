@@ -1,6 +1,5 @@
 using FluentValidation;
 using TaskManager.Application.DTOs.Tasks;
-using TaskPriority = TaskManager.Domain.Enums.TaskPriority;
 
 namespace TaskManager.Application.Validators;
 
@@ -21,10 +20,7 @@ public class CreateTaskValidator : AbstractValidator<CreateTaskDto>
             .GreaterThan(0).WithMessage("Categoria é obrigatória.");
 
         RuleFor(x => x.Priority)
-            .Cascade(CascadeMode.Stop)
-            .NotEmpty().WithMessage("Prioridade é obrigatória.")
-            .Must(priority => Enum.TryParse<TaskPriority>(priority, true, out _))
-            .WithMessage("Prioridade inválida. Use: Low, Medium ou High.");
+            .IsInEnum().WithMessage("Prioridade inválida. Use: Low, Medium ou High.");
 
         RuleFor(x => x.DueDate)
             .Must((_, dueDate) => !dueDate.HasValue || dueDate.Value > DateTime.UtcNow)

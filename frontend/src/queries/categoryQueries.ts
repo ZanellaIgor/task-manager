@@ -2,16 +2,37 @@ import {computed, type MaybeRefOrGetter, toValue} from 'vue'
 import {useMutation, useQuery, useQueryClient} from '@tanstack/vue-query'
 import {categoryService} from '../services/categoryService'
 import type {CategoryFormData} from '../schemas/categorySchema'
+import type {CategoryFilters} from '../types'
 
 export const categoryKeys = {
     all: ['categories'] as const,
+    filtered: (filters: CategoryFilters) => ['categories', filters] as const,
     detail: (id: number) => ['categories', id] as const,
+    options: ['categories', 'options'] as const,
 }
 
-export function useCategories() {
+export function useCategories(filters: MaybeRefOrGetter<CategoryFilters> = {}) {
     return useQuery({
-        queryKey: categoryKeys.all,
-        queryFn: () => categoryService.getAll(),
+        queryKey: computed(() => categoryKeys.filtered(toValue(filters))),
+        queryFn: () => categoryService.getAll(toValue(filters)),
+        staleTime: 30_000,
+    })
+}
+
+export function useCategoryOptions() {
+    const filters = computed<CategoryFilters>(() => ({
+        page: 1,
+        pageSize: 100,
+        sortBy: 'name',
+        sortDirection: 'Asc',
+    }))
+
+    return useQuery({
+        queryKey: categoryKeys.options,
+        queryFn: async () => {
+            const response = await categoryService.getAll(filters.value)
+            return response.items
+        },
         staleTime: 30_000,
     })
 }
@@ -89,20 +110,6 @@ export function useToggleCategoryStatus() {
             const id = typeof payload === 'number' ? payload : payload.id
             await Promise.all([
                 queryClient.invalidateQueries({queryKey: categoryKeys.detail(id)}),
-                invalidateCategories(queryClient),
-            ])
-        },
-    })
-}
-
-export function useDeleteCategory() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: (id: number) => categoryService.remove(id),
-        onSuccess: async (_category, id) => {
-            await Promise.all([
-                queryClient.removeQueries({queryKey: categoryKeys.detail(id)}),
                 invalidateCategories(queryClient),
             ])
         },

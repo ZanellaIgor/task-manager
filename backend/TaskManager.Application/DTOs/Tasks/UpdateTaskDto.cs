@@ -1,9 +1,11 @@
+using TaskPriority = TaskManager.Domain.Enums.TaskPriority;
+
 namespace TaskManager.Application.DTOs.Tasks;
 
 public record UpdateTaskDto(
     string Title,
     string? Description,
     int CategoryId,
-    string Priority,
+    TaskPriority Priority,
     DateTime? DueDate
 );

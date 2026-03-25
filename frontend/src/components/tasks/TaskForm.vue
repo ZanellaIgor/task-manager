@@ -5,7 +5,7 @@ import {toTypedSchema} from '@vee-validate/zod'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import BaseSelect from '@/components/shared/BaseSelect.vue'
-import {useCategories} from '@/queries/categoryQueries'
+import {useCategoryOptions} from '@/queries/categoryQueries'
 import {type TaskFormData, taskSchema} from '@/schemas/taskSchema'
 
 const props = withDefaults(
@@ -29,12 +29,12 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const categoriesQuery = useCategories()
+const categoriesQuery = useCategoryOptions()
 
 const defaultValues: TaskFormData = {
   title: '',
   description: '',
-  categoryId: undefined as unknown as number,
+  categoryId: 0,
   priority: 'Medium',
   dueDate: '',
 }
@@ -51,7 +51,7 @@ const [priority, priorityAttrs] = defineField('priority')
 const [dueDate, dueDateAttrs] = defineField('dueDate')
 
 const categoryOptions = computed(() => [
-  {label: 'Selecione uma categoria', value: ''},
+  {label: 'Selecione uma categoria', value: 0},
   ...((categoriesQuery.data.value ?? [])
       .filter((category) => category.isActive)
       .map((category) => ({
@@ -64,7 +64,7 @@ function buildValues(values?: Partial<TaskFormData> | null): TaskFormData {
   return {
     title: values?.title ?? '',
     description: values?.description ?? '',
-    categoryId: values?.categoryId ?? (undefined as unknown as number),
+    categoryId: values?.categoryId ?? 0,
     priority: values?.priority ?? 'Medium',
     dueDate: values?.dueDate ?? '',
   }

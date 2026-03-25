@@ -8,12 +8,21 @@ export const taskKeys = {
     all: ['tasks'] as const,
     filtered: (filters: TaskFilters) => ['tasks', filters] as const,
     detail: (id: number) => ['tasks', id] as const,
+    overview: ['tasks', 'overview'] as const,
 }
 
 export function useTasks(filters: MaybeRefOrGetter<TaskFilters> = {}) {
     return useQuery({
         queryKey: computed(() => taskKeys.filtered(toValue(filters))),
         queryFn: () => taskService.getAll(toValue(filters)),
+        staleTime: 30_000,
+    })
+}
+
+export function useTaskOverview() {
+    return useQuery({
+        queryKey: taskKeys.overview,
+        queryFn: () => taskService.getOverview(),
         staleTime: 30_000,
     })
 }
@@ -27,10 +36,7 @@ export function useTask(id: MaybeRefOrGetter<number | null | undefined>) {
 }
 
 function invalidateTasks(queryClient: ReturnType<typeof useQueryClient>) {
-    return Promise.all([
-        queryClient.invalidateQueries({queryKey: taskKeys.all}),
-        queryClient.invalidateQueries({queryKey: ['tasks']}),
-    ])
+    return queryClient.invalidateQueries({queryKey: taskKeys.all})
 }
 
 export function useCreateTask() {

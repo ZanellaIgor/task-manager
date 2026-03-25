@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import {computed} from 'vue'
+import {Ban, CheckCircle2, Clock, Loader2} from 'lucide-vue-next'
+import BaseBadge from '@/components/shared/BaseBadge.vue'
 
 type TaskStatus = 'Pending' | 'InProgress' | 'Completed' | 'Cancelled'
 type TaskPriority = 'Low' | 'Medium' | 'High'
@@ -20,56 +22,63 @@ const props = withDefaults(
 const statusConfig = computed(() => {
   switch (props.status) {
     case 'Completed':
-      return {label: 'Concluida', classes: 'bg-success/12 text-emerald-700'}
+      return {label: 'Concluída', icon: CheckCircle2, variant: 'success' as const}
     case 'InProgress':
-      return {label: 'Em andamento', classes: 'bg-primary/12 text-primary-dark'}
+      return {label: 'Em andamento', icon: Loader2, variant: 'info' as const}
     case 'Cancelled':
-      return {label: 'Cancelada', classes: 'bg-neutral-200 text-neutral-600'}
+      return {label: 'Cancelada', icon: Ban, variant: 'neutral' as const}
     default:
-      return {label: 'Pendente', classes: 'bg-warning/[0.14] text-amber-700'}
+      return {label: 'Pendente', icon: Clock, variant: 'warning' as const}
   }
 })
 
 const priorityConfig = computed(() => {
   switch (props.priority) {
     case 'High':
-      return {label: 'Alta', classes: 'bg-danger/12 text-red-700'}
+      return {label: 'Alta', dot: 'bg-red-500'}
     case 'Low':
-      return {label: 'Baixa', classes: 'bg-success/12 text-emerald-700'}
+      return {label: 'Baixa', dot: 'bg-emerald-500'}
     case 'Medium':
-      return {label: 'Media', classes: 'bg-warning/[0.14] text-amber-700'}
+      return {label: 'Média', dot: 'bg-amber-400'}
     default:
       return null
   }
 })
 
-const sizeClasses = computed(() =>
-    props.compact || props.size === 'sm'
-        ? 'px-2 py-1 text-[0.74rem]'
-        : 'px-2.5 py-1.5 text-[0.8rem]',
-)
+const iconSize = computed(() => (props.compact || props.size === 'sm' ? 11 : 13))
 </script>
 
 <template>
-  <span class="inline-flex flex-wrap gap-1.5">
-    <span
-        :class="[
-        'inline-flex items-center justify-center rounded-full font-semibold leading-none tracking-[0.01em]',
-        sizeClasses,
-        statusConfig.classes,
-      ]"
+  <div class="inline-flex flex-wrap gap-2">
+    <BaseBadge
+      :rounded="'full'"
+      :size="size"
+      :variant="statusConfig.variant"
+      class="gap-1.5 font-bold"
     >
+      <component
+        :is="statusConfig.icon"
+        :class="status === 'InProgress' && 'animate-spin'"
+        :size="iconSize"
+        aria-hidden="true"
+        class="shrink-0"
+      />
       {{ statusConfig.label }}
-    </span>
-    <span
-        v-if="priorityConfig"
-        :class="[
-        'inline-flex items-center justify-center rounded-full font-semibold leading-none tracking-[0.01em]',
-        sizeClasses,
-        priorityConfig.classes,
-      ]"
+    </BaseBadge>
+
+    <BaseBadge
+      v-if="priorityConfig"
+      :rounded="'full'"
+      :size="size"
+      class="gap-1.5 font-bold"
+      variant="neutral"
     >
+      <span
+        :class="priorityConfig.dot"
+        aria-hidden="true"
+        class="h-1.5 w-1.5 shrink-0 rounded-full"
+      />
       {{ priorityConfig.label }}
-    </span>
-  </span>
+    </BaseBadge>
+  </div>
 </template>

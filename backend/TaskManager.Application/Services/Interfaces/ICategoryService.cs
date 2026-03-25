@@ -1,18 +1,20 @@
+using TaskManager.Application.Common.Pagination;
 using TaskManager.Application.DTOs.Categories;
+using TaskManager.Application.Filters;
 
 namespace TaskManager.Application.Services.Interfaces;
 
 public interface ICategoryService
 {
-    Task<IEnumerable<CategoryDto>> GetAllAsync();
+    Task<PagedResult<CategoryDto>> GetAllAsync(CategoryFilterDto filters, CancellationToken cancellationToken = default);
 
-    Task<CategoryDto> GetByIdAsync(int id);
+    Task<CategoryDto> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<CategoryDto> CreateAsync(CreateCategoryDto dto);
+    Task<CategoryDto> CreateAsync(CreateCategoryDto dto, CancellationToken cancellationToken = default);
 
-    Task<CategoryDto> UpdateAsync(int id, UpdateCategoryDto dto);
+    Task<CategoryDto> UpdateAsync(int id, UpdateCategoryDto dto, CancellationToken cancellationToken = default);
 
-    Task<CategoryDto> DeactivateAsync(int id);
+    Task<CategoryDto> DeactivateAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<CategoryDto> ActivateAsync(int id);
+    Task<CategoryDto> ActivateAsync(int id, CancellationToken cancellationToken = default);
 }

@@ -1,11 +1,8 @@
 using TaskManager.Api.Extensions;
 using TaskManager.Api.Middlewares;
-using TaskManager.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-var frontendOrigin = builder.Configuration["Frontend:Origin"]?.TrimEnd('/');
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -13,35 +10,17 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-builder.Services.AddTaskManagerServices(builder.Configuration);
+builder.Services.AddTaskManagerServices(builder.Configuration, builder.Environment);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        if (!string.IsNullOrWhiteSpace(frontendOrigin))
-        {
-            policy.WithOrigins(frontendOrigin)
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        }
-    });
-});
-
 var app = builder.Build();
 
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-    await DatabaseSeeder.SeedAsync(db);
-}
+await app.ApplyDatabaseSetupAsync();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseCors();
+app.UseCors(ServiceCollectionExtensions.FrontendCorsPolicyName);
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapControllers();

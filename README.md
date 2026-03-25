@@ -48,11 +48,12 @@ e [docs/aspnet.md](/C:/Users/igorz/Documents/programacao/to-do/docs/aspnet.md).
 - Dashboard com indicadores e listas resumidas
 - Gestão de tarefas com criação, edição, conclusão, cancelamento e exclusão
 - Gestão de categorias com criação, edição, ativação e desativação
-- Filtros de tarefas por status, prioridade, categoria e busca
+- Filtros, paginação e ordenação em tarefas e categorias
 - Validação de formulários no frontend e no backend
 - Persistência em SQLite com migrations e seed automático
 - Swagger para documentação e teste da API
-- Tratamento centralizado de erros com payload `{ "error": "mensagem" }`
+- Tratamento centralizado de erros com `ProblemDetails` e `traceId`
+- Dashboard consumindo endpoint próprio de overview
 
 ## Como rodar
 
@@ -110,7 +111,14 @@ Configuração padrão do backend em `backend/TaskManager.Api/appsettings.json`:
     "Default": "Data Source=TaskManager.db"
   },
   "Frontend": {
-    "Origin": "http://localhost:5173"
+    "Origins": [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173"
+    ]
+  },
+  "Runtime": {
+    "ApplyMigrationsOnStartup": true,
+    "SeedOnStartup": true
   }
 }
 ```
@@ -120,8 +128,11 @@ Variáveis de ambiente úteis:
 - `ASPNETCORE_ENVIRONMENT`: define o ambiente do ASP.NET Core, por exemplo `Development` ou `Production`.
 - `ASPNETCORE_URLS`: sobrescreve a URL de escuta da API, por exemplo `http://localhost:5050`.
 - `ConnectionStrings__Default`: sobrescreve a connection string usada pelo EF Core.
-- `Frontend__Origin`: define a origem permitida no CORS para o frontend, por exemplo `http://localhost:5173`.
+- `Frontend__Origins__0`, `Frontend__Origins__1`, ...: definem as origens permitidas no CORS para o frontend.
+- `Runtime__ApplyMigrationsOnStartup`: controla migrations automáticas no boot.
+- `Runtime__SeedOnStartup`: controla seed automático no boot.
 - `VITE_API_URL`: define a base URL consumida pelo frontend, por exemplo `http://localhost:5000/api`.
+- `VITE_USE_API_MOCK`: habilita o mock local do frontend apenas quando definido como `true`.
 
 Exemplo de backend com variáveis de ambiente no PowerShell:
 
@@ -129,7 +140,10 @@ Exemplo de backend com variáveis de ambiente no PowerShell:
 $env:ASPNETCORE_ENVIRONMENT = "Development"
 $env:ASPNETCORE_URLS = "http://localhost:5050"
 $env:ConnectionStrings__Default = "Data Source=TaskManager.db"
-$env:Frontend__Origin = "http://127.0.0.1:5173"
+$env:Frontend__Origins__0 = "http://localhost:5173"
+$env:Frontend__Origins__1 = "http://127.0.0.1:5173"
+$env:Runtime__ApplyMigrationsOnStartup = "true"
+$env:Runtime__SeedOnStartup = "true"
 dotnet run --project .\backend\TaskManager.Api\TaskManager.Api.csproj
 ```
 
@@ -137,6 +151,7 @@ Exemplo de `.env` no frontend:
 
 ```dotenv
 VITE_API_URL=http://localhost:5050/api
+VITE_USE_API_MOCK=false
 ```
 
 ### Rodar manualmente
@@ -194,14 +209,16 @@ http://localhost:5000/api
 
 Se necessário, é possível sobrescrever via `VITE_API_URL`.
 
-Observação: se a API não estiver disponível, o frontend usa fallback mockado com `localStorage` para continuar
-funcional.
+Observação: o frontend usa a API real por padrão. O mock local com `localStorage` só deve ser ativado
+explicitamente com `VITE_USE_API_MOCK=true`, por exemplo em testes ou demonstrações controladas.
+Sem mock, `VITE_API_URL` precisa estar definido para evitar fallback implícito.
 
 ## Endpoints principais
 
 ### Tasks
 
-- `GET /api/tasks`
+- `GET /api/tasks?page=1&pageSize=9&status=Pending&priority=High&categoryId=1&search=backlog&sortBy=createdAt&sortDirection=Desc`
+- `GET /api/tasks/overview`
 - `GET /api/tasks/{id}`
 - `POST /api/tasks`
 - `PUT /api/tasks/{id}`
@@ -211,7 +228,7 @@ funcional.
 
 ### Categories
 
-- `GET /api/categories`
+- `GET /api/categories?page=1&pageSize=10&search=produto&isActive=true&sortBy=name&sortDirection=Asc`
 - `GET /api/categories/{id}`
 - `POST /api/categories`
 - `PUT /api/categories/{id}`
@@ -273,6 +290,6 @@ dotnet ef migrations add NomeDaMigration --project .\TaskManager.Infrastructure\
 
 ## Observações
 
-- O CORS do backend usa `Frontend:Origin` no `appsettings` ou `Frontend__Origin` em variável de ambiente.
+- O CORS do backend usa `Frontend:Origin` no `appsettings` ou `Frontend__Origin` em variável de ambiente, aceitando múltiplas origens separadas por `;` ou `,`.
 - O frontend foi ajustado para ocultar categorias inativas no formulário de tarefa.
 - O backend expõe `PATCH /api/categories/{id}/activate` para compatibilidade com a UI atual.

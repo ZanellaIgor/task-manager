@@ -1,4 +1,5 @@
 using FluentValidation;
+using TaskManager.Api.Extensions;
 using TaskManager.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,39 +24,55 @@ public class ExceptionHandlingMiddleware
         }
         catch (NotFoundException ex)
         {
-            await WriteErrorAsync(context, StatusCodes.Status404NotFound, ex.Message);
+            var problemDetails = ProblemDetailsExtensions.CreateProblemDetails(
+                context,
+                StatusCodes.Status404NotFound,
+                "Resource not found.",
+                ex.Message,
+                "resource_not_found");
+            await WriteProblemDetailsAsync(context, problemDetails);
         }
         catch (BusinessException ex)
         {
-            await WriteErrorAsync(context, StatusCodes.Status422UnprocessableEntity, ex.Message);
+            var problemDetails = ProblemDetailsExtensions.CreateProblemDetails(
+                context,
+                StatusCodes.Status422UnprocessableEntity,
+                "Business rule violation.",
+                ex.Message,
+                "business_rule_violation");
+            await WriteProblemDetailsAsync(context, problemDetails);
         }
         catch (ValidationException ex)
         {
-            var message = ex.Errors.Select(error => error.ErrorMessage).FirstOrDefault() ?? "Dados invalidos.";
-            await WriteErrorAsync(context, StatusCodes.Status422UnprocessableEntity, message);
+            var errors = ex.Errors
+                .GroupBy(error => string.IsNullOrWhiteSpace(error.PropertyName) ? "request" : error.PropertyName)
+                .ToDictionary(group => group.Key, group => group.Select(error => error.ErrorMessage).ToArray());
+
+            var problemDetails = ProblemDetailsExtensions.CreateValidationProblemDetails(context, errors);
+            await WriteProblemDetailsAsync(context, problemDetails);
         }
         catch (Exception ex)
         {
-            var payload = new Dictionary<string, object?>
-            {
-                ["error"] = "Erro interno."
-            };
+            var problemDetails = ProblemDetailsExtensions.CreateProblemDetails(
+                context,
+                StatusCodes.Status500InternalServerError,
+                "Unexpected error.",
+                "An unexpected error occurred.",
+                "unexpected_error");
 
             if (_environment.IsDevelopment())
             {
-                payload["detail"] = ex.Message;
+                problemDetails.Extensions["exception"] = ex.Message;
             }
 
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsJsonAsync(payload);
+            await WriteProblemDetailsAsync(context, problemDetails);
         }
     }
 
-    private static async Task WriteErrorAsync(HttpContext context, int statusCode, string message)
+    private static async Task WriteProblemDetailsAsync(HttpContext context, ProblemDetails problemDetails)
     {
-        context.Response.StatusCode = statusCode;
+        context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new { error = message });
+        await context.Response.WriteAsJsonAsync(problemDetails);
     }
 }

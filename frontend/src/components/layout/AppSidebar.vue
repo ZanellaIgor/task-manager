@@ -20,7 +20,7 @@ const props = withDefaults(
     }>(),
     {
       modelValue: true,
-      brand: 'TaskManager',
+      brand: 'Task Manager',
       tagline: 'Task Manager',
       items: () => [
         {label: 'Dashboard', to: '/dashboard', description: 'Resumo operacional'},

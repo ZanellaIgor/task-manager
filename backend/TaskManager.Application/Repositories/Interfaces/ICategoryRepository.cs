@@ -1,10 +1,12 @@
+using TaskManager.Application.Common.Pagination;
+using TaskManager.Application.Filters;
 using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Repositories.Interfaces;
 
 public interface ICategoryRepository
 {
-    Task<IEnumerable<Category>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<Category>> GetAllAsync(CategoryFilterDto filters, CancellationToken cancellationToken = default);
 
     Task<Category?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 

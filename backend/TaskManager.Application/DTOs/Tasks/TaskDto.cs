@@ -1,3 +1,6 @@
+using TaskPriority = TaskManager.Domain.Enums.TaskPriority;
+using TaskStatus = TaskManager.Domain.Enums.TaskStatus;
+
 namespace TaskManager.Application.DTOs.Tasks;
 
 public record CategorySummaryDto(int Id, string Name);
@@ -8,8 +11,8 @@ public record TaskDto(
     string? Description,
     int CategoryId,
     CategorySummaryDto? Category,
-    string Status,
-    string Priority,
+    TaskStatus Status,
+    TaskPriority Priority,
     DateTime CreatedAt,
     DateTime UpdatedAt,
     DateTime? DueDate,
