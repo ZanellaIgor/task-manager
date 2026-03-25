@@ -1,4 +1,4 @@
-# TaskManager Task Manager
+# Task Manager
 
 Aplicação full stack para gestão de tarefas, composta por um frontend em Vue 3 + TypeScript e uma API REST em ASP.NET
 Core 8 com SQLite.

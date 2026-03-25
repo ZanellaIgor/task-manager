@@ -7,6 +7,7 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import TaskStatusBadge from '@/components/tasks/TaskStatusBadge.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import ErrorState from '@/components/shared/ErrorState.vue'
+import BaseSkeleton from '@/components/shared/BaseSkeleton.vue'
 import {useTaskOverview} from '@/queries/taskQueries'
 import {getErrorMessage} from '@/services/api'
 import PageLayout from '@/components/layout/PageLayout.vue'
@@ -86,17 +87,33 @@ function formatDate(value?: string) {
     </template>
 
     <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <template v-if="isLoading">
+        <div
+          v-for="i in 4"
+          :key="i"
+          class="rounded-card border border-white/70 bg-white p-5 shadow-card"
+        >
+          <div class="flex justify-between items-start">
+            <div class="flex-1 space-y-3">
+              <BaseSkeleton height="0.75rem" width="40%" rounded="md" />
+              <BaseSkeleton height="2.5rem" width="60%" rounded="lg" />
+              <BaseSkeleton height="0.375rem" width="100%" rounded="full" />
+            </div>
+            <BaseSkeleton height="2.75rem" width="2.75rem" rounded="2xl" />
+          </div>
+        </div>
+      </template>
       <article
+        v-else
         v-for="card in summaryCards"
         :key="card.title"
-        class="rounded-card border border-white/70 bg-white p-5 shadow-card"
+        class="rounded-card border border-white/70 bg-white p-5 shadow-card transition-all hover:shadow-lg"
       >
         <div class="flex items-start justify-between gap-3">
           <div class="flex-1">
             <p class="text-xs font-bold uppercase tracking-wider text-neutral-400">{{ card.title }}</p>
             <p
-              class="mt-2 font-display text-4xl font-extrabold text-neutral-900"
-              style="font-variant-numeric: tabular-nums; letter-spacing: -0.02em"
+              class="mt-2 font-display text-4xl font-extrabold tracking-[-0.02em] tabular-nums text-neutral-900"
             >
               {{ card.value }}
             </p>
@@ -153,12 +170,21 @@ function formatDate(value?: string) {
           </template>
         </SectionHeader>
 
-        <div v-if="isLoading" class="mt-6 space-y-3">
+        <div v-if="isLoading" class="mt-8 space-y-4">
           <div
             v-for="index in 5"
             :key="index"
-            class="h-20 animate-pulse rounded-2xl bg-neutral-100"
-          />
+            class="flex items-center justify-between gap-4 px-2"
+          >
+            <div class="flex items-center gap-4 flex-1">
+              <BaseSkeleton height="2.5rem" width="2.5rem" rounded="xl" />
+              <div class="flex-1 space-y-2">
+                <BaseSkeleton height="0.9rem" width="45%" rounded="md" />
+                <BaseSkeleton height="0.7rem" width="65%" rounded="sm" />
+              </div>
+            </div>
+            <BaseSkeleton height="1.5rem" width="5rem" rounded="full" />
+          </div>
         </div>
 
         <div v-else-if="recentTasks.length" class="mt-8 space-y-4">
@@ -199,12 +225,20 @@ function formatDate(value?: string) {
           title="Prazos próximos"
         />
 
-        <div v-if="isLoading" class="mt-6 space-y-3">
+        <div v-if="isLoading" class="mt-6 space-y-4 overflow-hidden">
           <div
             v-for="index in 3"
             :key="index"
-            class="h-24 animate-pulse rounded-2xl bg-neutral-100"
-          />
+            class="rounded-2xl border border-neutral-100 p-4 space-y-3"
+          >
+            <div class="flex justify-between items-start gap-3">
+              <div class="flex-1 space-y-2">
+                <BaseSkeleton height="1.1rem" width="70%" rounded="md" />
+                <BaseSkeleton height="0.8rem" width="40%" rounded="sm" />
+              </div>
+              <BaseSkeleton height="1.75rem" width="2.5rem" rounded="full" />
+            </div>
+          </div>
         </div>
 
         <div v-else-if="upcomingTasks.length" class="mt-6 space-y-3">

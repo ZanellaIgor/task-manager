@@ -16,6 +16,7 @@ import EmptyState from '@/components/shared/EmptyState.vue'
 import BaseBadge from '@/components/shared/BaseBadge.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import ErrorState from '@/components/shared/ErrorState.vue'
+import BaseSkeleton from '@/components/shared/BaseSkeleton.vue'
 import {useToast} from '@/composables/useToast'
 import {useCategories, useCreateCategory, useToggleCategoryStatus, useUpdateCategory} from '@/queries/categoryQueries'
 import {readQueryBoolean, readQueryNumber, readQueryString, withQueryValue} from '@/router/query'
@@ -256,12 +257,27 @@ async function executeToggle() {
         @retry="refetch"
       />
 
-      <div v-else-if="isLoading" class="space-y-2 px-6 py-4">
-        <div v-for="index in 5" :key="index" class="h-12 animate-pulse rounded-lg bg-neutral-100" />
+      <div v-else-if="isLoading" class="space-y-5 px-6 py-5">
+        <div v-for="index in 5" :key="index" class="flex flex-col gap-3">
+          <div class="flex items-start justify-between">
+            <div class="flex-1 space-y-2">
+              <BaseSkeleton height="1.25rem" width="30%" rounded="md" />
+              <BaseSkeleton height="0.875rem" width="60%" rounded="sm" />
+            </div>
+            <BaseSkeleton height="1.5rem" width="4rem" rounded="full" />
+          </div>
+          <div class="flex gap-2">
+            <BaseSkeleton height="2.25rem" width="5rem" rounded="lg" />
+            <BaseSkeleton height="2.25rem" width="5rem" rounded="lg" />
+          </div>
+          <div v-if="index < 5" class="border-b border-neutral-50 pt-2" />
+        </div>
       </div>
 
-      <div v-else-if="categoriesList.length" class="overflow-x-auto">
-        <table class="min-w-full">
+      <div v-else-if="categoriesList.length">
+        <!-- Desktop Table View -->
+        <div class="hidden overflow-x-auto md:block">
+          <table class="min-w-full">
           <thead>
             <tr class="bg-neutral-50 text-left text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-neutral-400">
               <th class="px-6 py-2.5">Categoria</th>
@@ -270,7 +286,10 @@ async function executeToggle() {
               <th class="px-6 py-2.5 text-right">Ações</th>
             </tr>
           </thead>
-          <tbody>
+          <TransitionGroup
+            name="list"
+            tag="tbody"
+          >
             <tr
               v-for="category in categoriesList"
               :key="category.id"
@@ -316,16 +335,74 @@ async function executeToggle() {
                 </div>
               </td>
             </tr>
-          </tbody>
+          </TransitionGroup>
         </table>
       </div>
+
+      <!-- Mobile Cards View -->
+      <TransitionGroup
+        class="grid gap-4 p-4 md:hidden"
+        name="list"
+        tag="div"
+      >
+        <article
+          v-for="category in categoriesList"
+          :key="category.id"
+          class="flex flex-col gap-3 rounded-2xl border border-neutral-100 bg-neutral-50/50 p-4 transition-all hover:bg-white hover:shadow-sm"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="font-bold text-neutral-900">{{ category.name }}</h3>
+              <p class="mt-1 text-[0.82rem] leading-relaxed text-neutral-500">
+                {{ category.description || 'Sem descrição' }}
+              </p>
+            </div>
+            <BaseBadge
+              :variant="category.isActive ? 'success' : 'neutral'"
+              rounded="full"
+              size="sm"
+            >
+              {{ category.isActive ? 'Ativa' : 'Inativa' }}
+            </BaseBadge>
+          </div>
+          <div class="flex gap-2 border-t border-neutral-100 pt-3">
+            <BaseButton
+              class="flex-1"
+              size="sm"
+              variant="secondary"
+              @click="store.openEdit(category.id)"
+            >
+              Editar
+            </BaseButton>
+            <BaseButton
+              :class="category.isActive
+                ? 'border-amber-200 bg-amber-50 text-amber-700'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700'"
+              :disabled="isSubmitting"
+              class="flex-1"
+              size="sm"
+              variant="ghost"
+              @click="confirmToggle(category)"
+            >
+              {{ category.isActive ? 'Desativar' : 'Ativar' }}
+            </BaseButton>
+          </div>
+        </article>
+      </TransitionGroup>
+    </div>
 
       <EmptyState
         v-else
         :icon="FolderX"
-        description="Ajuste a busca ou crie uma nova categoria."
+        :description="search ? `Nenhum resultado para '${search}'.` : 'Ajuste os filtros ou crie uma nova categoria.'"
         title="Nenhuma categoria encontrada"
-      />
+      >
+        <template v-if="search" #actions>
+          <BaseButton variant="secondary" @click="updateSearch('')">
+            Limpar busca
+          </BaseButton>
+        </template>
+      </EmptyState>
     </section>
 
     <BasePagination

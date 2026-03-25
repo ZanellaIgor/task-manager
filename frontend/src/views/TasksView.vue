@@ -7,6 +7,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import PageLayout from '@/components/layout/PageLayout.vue'
 import TaskCard from '@/components/tasks/TaskCard.vue'
+import TaskCardSkeleton from '@/components/tasks/TaskCardSkeleton.vue'
 import TaskFilters from '@/components/tasks/TaskFilters.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
@@ -59,6 +60,13 @@ const filtersModel = computed<TaskFiltersValue>(() => {
     categoryId: categoryId > 0 ? categoryId : '',
     search: readQueryString(route.query, 'search') ?? '',
   }
+})
+
+const hasActiveFilters = computed(() => {
+  return filtersModel.value.status !== '' ||
+    filtersModel.value.priority !== '' ||
+    filtersModel.value.categoryId !== '' ||
+    filtersModel.value.search !== ''
 })
 
 const taskFilters = computed<TaskQueryFilters>(() => ({
@@ -253,15 +261,18 @@ function initialValues(task?: Task | null): Partial<TaskFormData> | undefined {
     />
 
     <section v-else-if="isLoading" class="grid gap-3.5 lg:grid-cols-2 2xl:grid-cols-3">
-      <div
+      <TaskCardSkeleton
         v-for="index in PAGE_SIZE"
         :key="index"
-        class="h-44 animate-pulse rounded-[1.1rem] bg-white shadow-card"
       />
     </section>
 
     <template v-else-if="tasks.length">
-      <section class="grid gap-3.5 lg:grid-cols-2 2xl:grid-cols-3">
+      <TransitionGroup
+        class="grid gap-3.5 lg:grid-cols-2 2xl:grid-cols-3"
+        name="list"
+        tag="section"
+      >
         <TaskCard
           v-for="task in tasks"
           :key="task.id"
@@ -271,7 +282,7 @@ function initialValues(task?: Task | null): Partial<TaskFormData> | undefined {
           @delete="confirmDelete(task.id)"
           @edit="store.openEdit(task.id)"
         />
-      </section>
+      </TransitionGroup>
 
       <BasePagination
         :disabled="isFetching"
@@ -289,10 +300,17 @@ function initialValues(task?: Task | null): Partial<TaskFormData> | undefined {
     >
       <EmptyState
         :icon="ListTodo"
-        description="Ajuste os filtros ou crie a primeira tarefa para iniciar o fluxo."
+        :description="hasActiveFilters ? 'Nenhuma tarefa corresponde aos filtros selecionados.' : 'Crie a primeira tarefa para começar a organizar seu dia.'"
         title="Nenhuma tarefa encontrada"
       >
-        <BaseButton @click="store.openCreate()">Nova tarefa</BaseButton>
+        <template #actions>
+          <div class="flex flex-wrap items-center justify-center gap-3">
+            <BaseButton v-if="hasActiveFilters" variant="secondary" @click="clearFilters">
+              Limpar filtros
+            </BaseButton>
+            <BaseButton @click="store.openCreate()">Nova tarefa</BaseButton>
+          </div>
+        </template>
       </EmptyState>
     </section>
 
