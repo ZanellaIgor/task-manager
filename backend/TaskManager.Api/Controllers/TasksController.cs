@@ -1,0 +1,67 @@
+using TaskManager.Application.DTOs.Tasks;
+using TaskManager.Application.Filters;
+using TaskManager.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+
+namespace TaskManager.Api.Controllers;
+
+[ApiController]
+[Route("api/tasks")]
+public class TasksController : ControllerBase
+{
+    private readonly ITaskService _taskService;
+
+    public TasksController(ITaskService taskService)
+    {
+        _taskService = taskService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] TaskFilterDto filters)
+    {
+        var tasks = await _taskService.GetAllAsync(filters);
+        return Ok(tasks);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var task = await _taskService.GetByIdAsync(id);
+        return Ok(task);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateTaskDto dto)
+    {
+        var task = await _taskService.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = task.Id }, task);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskDto dto)
+    {
+        var task = await _taskService.UpdateAsync(id, dto);
+        return Ok(task);
+    }
+
+    [HttpPatch("{id:int}/complete")]
+    public async Task<IActionResult> Complete(int id)
+    {
+        var task = await _taskService.CompleteAsync(id);
+        return Ok(task);
+    }
+
+    [HttpPatch("{id:int}/cancel")]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        var task = await _taskService.CancelAsync(id);
+        return Ok(task);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await _taskService.DeleteAsync(id);
+        return NoContent();
+    }
+}

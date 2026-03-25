@@ -1,0 +1,6 @@
+namespace TaskManager.Application.DTOs.Categories;
+
+public record CreateCategoryDto(
+    string Name,
+    string? Description
+);

@@ -1,0 +1,15 @@
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\TaskManager.Application.csproj.AssemblyReference.cache
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\TaskManager.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\TaskManager.Application.AssemblyInfoInputs.cache
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\TaskManager.Application.AssemblyInfo.cs
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\TaskManager.Application.csproj.CoreCompileInputs.cache
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\bin\Debug\net8.0\TaskManager.Application.deps.json
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\bin\Debug\net8.0\TaskManager.Application.dll
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\bin\Debug\net8.0\TaskManager.Application.pdb
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\bin\Debug\net8.0\TaskManager.Domain.dll
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\bin\Debug\net8.0\TaskManager.Domain.pdb
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\Magnadat.C092594D.Up2Date
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\TaskManager.Application.dll
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\refint\TaskManager.Application.dll
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\TaskManager.Application.pdb
+C:\Users\igorz\Documents\programacao\to-do\backend\TaskManager.Application\obj\Debug\net8.0\ref\TaskManager.Application.dll

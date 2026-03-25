@@ -1,0 +1,157 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300..800&display=swap");
+@import "tailwindcss";
+
+@theme {
+    /* Brand */
+    --color-primary: #1b4fd8;
+    --color-primary-dark: #1239a8;
+    --color-primary-light: #3b6fff;
+    --color-primary-soft: #eef2ff;
+
+    /* Semantic */
+    --color-accent: #06b6d4;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+
+    /* Neutral scale */
+    --color-neutral-900: #0f172a;
+    --color-neutral-700: #334155;
+    --color-neutral-600: #475569;
+    --color-neutral-500: #64748b;
+    --color-neutral-400: #94a3b8;
+    --color-neutral-300: #cbd5e1;
+    --color-neutral-200: #e2e8f0;
+    --color-neutral-100: #f1f5f9;
+    --color-neutral-50: #f8fafc;
+
+    /* === App surface tokens (use these in views) === */
+    --color-bg-app: #eef0f4;     /* fundo canônico de TODAS as views */
+    --color-bg-card: #ffffff;    /* fundo de cards e painéis */
+    --color-bg-subtle: #f8f9fb;  /* fundo de thead, secondary panels */
+
+    /* Typography */
+    --font-sans: "Inter", system-ui, sans-serif;
+    --font-display: "Inter", system-ui, sans-serif;
+
+    /* Radius */
+    --radius-sm: 0.375rem;
+    --radius-card: 1.25rem;
+
+    /* Shadow */
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
+    --shadow-card-hover: 0 4px 16px rgba(15, 23, 42, 0.10);
+    --shadow-modal: 0 20px 60px rgba(15, 23, 42, 0.20);
+}
+
+@layer base {
+    :root {
+        color-scheme: light;
+        font-family: var(--font-sans);
+        font-size: 16px;
+        line-height: 1.6;
+        background: var(--color-bg-app);
+        color: var(--color-neutral-900);
+        font-optical-sizing: auto;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    }
+
+    html,
+    body,
+    #app {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font-sans);
+        font-size: 1rem;
+        line-height: 1.6;
+        letter-spacing: -0.011em;
+        background: var(--color-bg-app);
+        color: var(--color-neutral-900);
+    }
+
+    /* --- Heading scale (Syne display) --- */
+    h1, h2, h3, h4 {
+        font-family: var(--font-display);
+        color: var(--color-neutral-900);
+        margin: 0;
+        text-wrap: balance;
+    }
+
+    h1 {
+        font-size: clamp(1.55rem, 2.4vw, 2rem);
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.022em;
+    }
+
+    h2 {
+        font-size: 1.35rem;
+        font-weight: 600;
+        line-height: 1.25;
+        letter-spacing: -0.014em;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: -0.008em;
+    }
+
+    h4 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.35;
+        letter-spacing: 0;
+    }
+
+    /* --- Paragraph & small text --- */
+    p {
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    small {
+        font-size: 0.8125rem;
+        line-height: 1.5;
+    }
+
+    strong, b {
+        font-weight: 600;
+    }
+
+    /* --- Tabular figures for numeric UI --- */
+    .tabular-nums {
+        font-variant-numeric: tabular-nums;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+        font: inherit;
+        letter-spacing: inherit;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    ::selection {
+        background: rgba(27, 79, 216, 0.15);
+        color: var(--color-primary-dark);
+    }
+}
+
