@@ -2,9 +2,7 @@
 import {computed} from 'vue'
 import {Ban, CheckCircle2, Clock, Loader2} from 'lucide-vue-next'
 import BaseBadge from '@/components/shared/BaseBadge.vue'
-
-type TaskStatus = 'Pending' | 'InProgress' | 'Completed' | 'Cancelled'
-type TaskPriority = 'Low' | 'Medium' | 'High'
+import type {TaskStatus, TaskPriority} from '@/types'
 
 const props = withDefaults(
     defineProps<{
@@ -58,7 +56,7 @@ const iconSize = computed(() => (props.compact || props.size === 'sm' ? 11 : 13)
     >
       <component
         :is="statusConfig.icon"
-        :class="status === 'InProgress' && 'animate-spin'"
+        :class="status === 'InProgress' && 'animate-pulse'"
         :size="iconSize"
         aria-hidden="true"
         class="shrink-0"

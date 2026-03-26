@@ -3,12 +3,21 @@ import type {Category, CategoryFilters, PaginatedResponse} from '../types'
 import type {CategoryFormData} from '../schemas/categorySchema'
 
 export const categoryService = {
-    getAll: (filters?: CategoryFilters) =>
+    getAll: (filters?: CategoryFilters): Promise<PaginatedResponse<Category>> =>
         api.get<PaginatedResponse<Category>>('/categories', {params: filters}).then((response) => response.data),
-    getById: (id: number) => api.get<Category | null>(`/categories/${id}`).then((response) => response.data),
-    create: (data: CategoryFormData) => api.post<Category>('/categories', data).then((response) => response.data),
-    update: (id: number, data: CategoryFormData) =>
+
+    getById: (id: number): Promise<Category | null> =>
+        api.get<Category | null>(`/categories/${id}`).then((response) => response.data),
+
+    create: (data: CategoryFormData): Promise<Category> =>
+        api.post<Category>('/categories', data).then((response) => response.data),
+
+    update: (id: number, data: CategoryFormData): Promise<Category> =>
         api.put<Category>(`/categories/${id}`, data).then((response) => response.data),
-    deactivate: (id: number) => api.patch<Category>(`/categories/${id}/deactivate`).then((response) => response.data),
-    activate: (id: number) => api.patch<Category>(`/categories/${id}/activate`).then((response) => response.data),
+
+    deactivate: (id: number): Promise<Category> =>
+        api.patch<Category>(`/categories/${id}/deactivate`).then((response) => response.data),
+
+    activate: (id: number): Promise<Category> =>
+        api.patch<Category>(`/categories/${id}/activate`).then((response) => response.data),
 }

@@ -4,9 +4,14 @@ import {Search, X} from 'lucide-vue-next'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import BaseSelect from '@/components/shared/BaseSelect.vue'
-
-type TaskStatus = 'Pending' | 'InProgress' | 'Completed' | 'Cancelled'
-type TaskPriority = 'Low' | 'Medium' | 'High'
+import {
+  TASK_STATUS_LABELS,
+  TASK_PRIORITY_LABELS,
+  TASK_STATUSES,
+  TASK_PRIORITIES,
+  type TaskStatus,
+  type TaskPriority,
+} from '@/types'
 
 interface CategoryOption {
   id: number
@@ -43,17 +48,12 @@ const emit = defineEmits<{
 
 const statusOptions = [
   {label: 'Todas as situacoes', value: ''},
-  {label: 'Pendente', value: 'Pending'},
-  {label: 'Em andamento', value: 'InProgress'},
-  {label: 'Concluida', value: 'Completed'},
-  {label: 'Cancelada', value: 'Cancelled'},
+  ...TASK_STATUSES.map((s) => ({label: TASK_STATUS_LABELS[s], value: s})),
 ]
 
 const priorityOptions = [
   {label: 'Todas as prioridades', value: ''},
-  {label: 'Baixa', value: 'Low'},
-  {label: 'Media', value: 'Medium'},
-  {label: 'Alta', value: 'High'},
+  ...TASK_PRIORITIES.map((p) => ({label: TASK_PRIORITY_LABELS[p], value: p})),
 ]
 
 const categoryOptions = computed(() => [

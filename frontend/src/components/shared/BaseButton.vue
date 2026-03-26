@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {computed} from 'vue'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type Variant = 'primary' | 'secondary' | 'soft' | 'ghost' | 'danger'
 type Size = 'sm' | 'md' | 'lg'
 
 defineOptions({inheritAttrs: false})
@@ -36,12 +36,14 @@ const variantMap: Record<Variant, string> = {
       'bg-gradient-to-b from-primary-light to-primary text-white shadow-[0_4px_12px_rgba(27,79,216,0.22)] hover:shadow-[0_6px_16px_rgba(27,79,216,0.30)]',
   secondary:
       'bg-white text-neutral-700 border-neutral-300 shadow-[0_1px_2px_rgba(15,23,42,0.06)] hover:bg-neutral-50 hover:border-neutral-400',
+  soft:
+      'bg-primary-soft text-primary border-transparent shadow-none hover:bg-[#dfe7ff] hover:text-primary-dark',
   ghost: 'bg-transparent text-neutral-600 border-neutral-200 hover:bg-neutral-100 hover:text-neutral-800',
   danger: 'bg-red-600 text-white border-red-600 shadow-[0_4px_12px_rgba(220,38,38,0.20)] hover:bg-red-700',
 }
 
 const classes = computed(() => [
-  'inline-flex items-center justify-center gap-2 border border-transparent rounded-[0.875rem]',
+  'relative inline-flex items-center justify-center gap-2 border border-transparent rounded-[0.875rem]',
   'font-semibold leading-none whitespace-nowrap cursor-pointer',
   'transition-all duration-200 ease-out',
   'focus-visible:outline-[3px] focus-visible:outline-primary-light/20 focus-visible:outline-offset-2',
@@ -57,6 +59,7 @@ const classes = computed(() => [
 <template>
   <button
       :class="classes"
+      :aria-busy="loading"
       :disabled="disabled || loading"
       :type="type"
       v-bind="$attrs"
@@ -64,9 +67,12 @@ const classes = computed(() => [
     <span
         v-if="loading"
         aria-hidden="true"
-        class="size-4 rounded-full border-2 border-current border-r-transparent animate-spin"
+        class="pointer-events-none absolute inset-0 m-auto size-4 rounded-full border-2 border-current border-r-transparent animate-spin"
     />
-    <span class="inline-flex items-center gap-1.5">
+    <span
+        :class="loading ? 'opacity-0' : 'opacity-100'"
+        class="inline-flex items-center gap-1.5 transition-opacity duration-150"
+    >
       <slot/>
     </span>
   </button>

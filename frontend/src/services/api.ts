@@ -1,6 +1,5 @@
 import axios, {AxiosError, type InternalAxiosRequestConfig} from 'axios'
 import {env} from '../config/env'
-import {mockRequest} from './mockApi'
 import type {ApiProblemDetails} from '../types'
 
 export class ApiError extends Error {
@@ -45,7 +44,7 @@ function normalizeApiError(error: AxiosError<ApiProblemDetails>) {
   )
 }
 
-export function toApiError(error: unknown, fallback = 'Unexpected request error.') {
+export function toApiError(error: unknown, fallback = 'Unexpected request error.'): ApiError {
   if (error instanceof ApiError) {
     return error
   }
@@ -61,22 +60,32 @@ export function toApiError(error: unknown, fallback = 'Unexpected request error.
   return new ApiError(fallback)
 }
 
-export function getErrorMessage(error: unknown, fallback = 'Unexpected request error.') {
+export function getErrorMessage(error: unknown, fallback = 'Unexpected request error.'): string {
   return toApiError(error, fallback).message
 }
 
-api.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError<ApiProblemDetails>) => {
-    if (env.useApiMock && error.config) {
-      const fallback = await mockRequest(error.config as InternalAxiosRequestConfig)
-      if (fallback) {
-        return fallback
+if (env.useApiMock) {
+  api.interceptors.response.use(
+    (response) => response,
+    async (error: AxiosError<ApiProblemDetails>) => {
+      if (error.config) {
+        const {mockRequest} = await import('./mockApi')
+        const fallback = await mockRequest(error.config as InternalAxiosRequestConfig)
+        if (fallback) {
+          return fallback
+        }
       }
-    }
 
-    return Promise.reject(normalizeApiError(error))
-  },
-)
+      return Promise.reject(normalizeApiError(error))
+    },
+  )
+} else {
+  api.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError<ApiProblemDetails>) => {
+      return Promise.reject(normalizeApiError(error))
+    },
+  )
+}
 
 export default api

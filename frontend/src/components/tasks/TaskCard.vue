@@ -3,25 +3,14 @@ import {computed} from 'vue'
 import {Ban, CalendarDays, CheckCheck, CircleAlert, PencilLine, Trash2} from 'lucide-vue-next'
 import TaskStatusBadge from '@/components/tasks/TaskStatusBadge.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
+import type {Task} from '@/types'
 
-type TaskStatus = 'Pending' | 'InProgress' | 'Completed' | 'Cancelled'
-type TaskPriority = 'Low' | 'Medium' | 'High'
-
-interface TaskCardTask {
-  id: number
-  title: string
-  description?: string
-  category?: { id: number; name: string }
-  status: TaskStatus
-  priority: TaskPriority
-  dueDate?: string
-  createdAt?: string
-  updatedAt?: string
-}
+type TaskCardTask = Pick<Task, 'id' | 'title' | 'description' | 'category' | 'status' | 'priority' | 'dueDate' | 'createdAt' | 'updatedAt'>
 
 const props = defineProps<{
   task: TaskCardTask
-  showActions?: boolean
+  loadingComplete?: boolean
+  loadingCancel?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -63,7 +52,7 @@ const dueDateLabel = computed(() => {
     "
       class="flex flex-col gap-3 p-4 border rounded-xl bg-white transition-all duration-200 ease-out hover:-translate-y-0.5"
   >
-    <!-- Title + Description (primary info first) -->
+    <!-- Title + Description -->
     <div class="flex flex-col gap-1">
       <h3
           :class="isTerminal && 'line-through text-neutral-400'"
@@ -104,44 +93,58 @@ const dueDateLabel = computed(() => {
       </span>
     </div>
 
-    <!-- Divider (active tasks only) -->
-    <div v-if="!isTerminal" class="-mx-4 border-t border-neutral-100"/>
+    <!-- Divider -->
+    <div class="-mx-4 border-t border-neutral-100"/>
 
-    <!-- Action buttons (active tasks only) -->
-    <div v-if="!isTerminal" class="flex items-center gap-2">
-      <BaseButton
-          aria-label="Editar tarefa"
-          size="sm"
-          variant="ghost"
-          @click="emit('edit')"
-      >
-        <PencilLine :size="13" aria-hidden="true"/>
-        Editar
-      </BaseButton>
+    <!-- Actions -->
+    <div class="flex items-center gap-2">
+      <template v-if="!isTerminal">
+        <BaseButton
+            aria-label="Editar tarefa"
+            size="sm"
+            variant="ghost"
+            @click="emit('edit')"
+        >
+          <PencilLine :size="13" aria-hidden="true"/>
+          Editar
+        </BaseButton>
 
-      <BaseButton
-          v-if="task.status !== 'Completed'"
-          aria-label="Marcar tarefa como concluída"
-          class="text-emerald-700 bg-emerald-50 border-emerald-100 hover:bg-emerald-100"
-          size="sm"
-          variant="ghost"
-          @click="emit('complete')"
-      >
-        <CheckCheck :size="13" aria-hidden="true"/>
-        Concluir
-      </BaseButton>
+        <BaseButton
+            v-if="task.status !== 'Completed'"
+            :disabled="loadingComplete"
+            :loading="loadingComplete"
+            aria-label="Marcar tarefa como concluída"
+            class="text-emerald-700 bg-emerald-50 border-emerald-100 hover:bg-emerald-100"
+            size="sm"
+            variant="ghost"
+            @click="emit('complete')"
+        >
+          <CheckCheck :size="13" aria-hidden="true"/>
+          Concluir
+        </BaseButton>
 
-      <BaseButton
-          v-if="task.status === 'Pending' || task.status === 'InProgress'"
-          aria-label="Cancelar tarefa"
-          class="text-amber-700 bg-amber-50 border-amber-100 hover:bg-amber-100"
-          size="sm"
-          variant="ghost"
-          @click="emit('cancel')"
+        <BaseButton
+            v-if="task.status === 'Pending' || task.status === 'InProgress'"
+            :disabled="loadingCancel"
+            :loading="loadingCancel"
+            aria-label="Cancelar tarefa"
+            class="text-amber-700 bg-amber-50 border-amber-100 hover:bg-amber-100"
+            size="sm"
+            variant="ghost"
+            @click="emit('cancel')"
+        >
+          <Ban :size="13" aria-hidden="true"/>
+          Cancelar
+        </BaseButton>
+      </template>
+
+      <span
+          v-else
+          :class="task.status === 'Completed' ? 'text-emerald-700' : 'text-neutral-500'"
+          class="text-[0.78rem] font-semibold"
       >
-        <Ban :size="13" aria-hidden="true"/>
-        Cancelar
-      </BaseButton>
+        {{ task.status === 'Completed' ? '✓ Concluída' : '✕ Cancelada' }}
+      </span>
 
       <BaseButton
           aria-label="Excluir tarefa"
@@ -151,33 +154,8 @@ const dueDateLabel = computed(() => {
           @click="emit('delete')"
       >
         <Trash2 :size="13" aria-hidden="true"/>
+        Excluir
       </BaseButton>
-    </div>
-
-    <!-- Terminal state footer -->
-    <div
-        v-if="isTerminal"
-        :class="task.status === 'Completed' ? 'bg-emerald-50 border-emerald-100' : 'bg-neutral-50 border-neutral-100'"
-        class="-mx-4 -mb-4 px-4 py-2 rounded-b-xl border-t"
-    >
-      <div class="flex items-center justify-between">
-        <span
-            :class="task.status === 'Completed' ? 'text-emerald-700' : 'text-neutral-500'"
-            class="text-[0.78rem] font-semibold"
-        >
-          {{ task.status === 'Completed' ? '✓ Concluída' : '✕ Cancelada' }}
-        </span>
-        <BaseButton
-            aria-label="Excluir tarefa"
-            class="text-neutral-400 hover:text-red-600"
-            size="sm"
-            variant="ghost"
-            @click="emit('delete')"
-        >
-          <Trash2 :size="12" aria-hidden="true"/>
-          Excluir
-        </BaseButton>
-      </div>
     </div>
   </article>
 </template>

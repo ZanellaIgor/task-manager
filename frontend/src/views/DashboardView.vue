@@ -15,6 +15,7 @@ import SectionHeader from '@/components/shared/SectionHeader.vue'
 
 const {data: overview, isLoading, isError, error, refetch} = useTaskOverview()
 const sidebarOpen = ref(false)
+const toggleSidebar = () => { sidebarOpen.value = !sidebarOpen.value }
 
 const summaryCards = computed(() => {
   const data = overview.value
@@ -73,7 +74,7 @@ function formatDate(value?: string) {
       <AppHeader
         description="Visão geral das tarefas, prioridades e prazos do time."
         title="Dashboard"
-        @toggle-sidebar="sidebarOpen = !sidebarOpen"
+        @toggle-sidebar="toggleSidebar"
       >
         <template #actions>
           <RouterLink to="/tasks">
@@ -86,66 +87,6 @@ function formatDate(value?: string) {
       </AppHeader>
     </template>
 
-    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <template v-if="isLoading">
-        <div
-          v-for="i in 4"
-          :key="i"
-          class="rounded-card border border-white/70 bg-white p-5 shadow-card"
-        >
-          <div class="flex justify-between items-start">
-            <div class="flex-1 space-y-3">
-              <BaseSkeleton height="0.75rem" width="40%" rounded="md" />
-              <BaseSkeleton height="2.5rem" width="60%" rounded="lg" />
-              <BaseSkeleton height="0.375rem" width="100%" rounded="full" />
-            </div>
-            <BaseSkeleton height="2.75rem" width="2.75rem" rounded="2xl" />
-          </div>
-        </div>
-      </template>
-      <article
-        v-else
-        v-for="card in summaryCards"
-        :key="card.title"
-        class="rounded-card border border-white/70 bg-white p-5 shadow-card transition-all hover:shadow-lg"
-      >
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex-1">
-            <p class="text-xs font-bold uppercase tracking-wider text-neutral-400">{{ card.title }}</p>
-            <p
-              class="mt-2 font-display text-4xl font-extrabold tracking-[-0.02em] tabular-nums text-neutral-900"
-            >
-              {{ card.value }}
-            </p>
-            <!-- Progress bar -->
-            <div v-if="overview?.totalCount" class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
-              <div
-                :class="{
-                  'bg-primary': card.tone === 'default',
-                  'bg-warning': card.tone === 'warning',
-                  'bg-accent': card.tone === 'info',
-                  'bg-success': card.tone === 'success',
-                }"
-                :style="{ width: `${(card.value / overview.totalCount) * 100}%` }"
-                class="h-full transition-all duration-700 ease-out"
-              />
-            </div>
-          </div>
-          <div
-            :class="{
-              'bg-primary-soft text-primary': card.tone === 'default',
-              'bg-amber-50 text-warning': card.tone === 'warning',
-              'bg-cyan-50 text-accent': card.tone === 'info',
-              'bg-emerald-50 text-success': card.tone === 'success',
-            }"
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm"
-          >
-            <component :is="card.icon" class="h-5 w-5" />
-          </div>
-        </div>
-      </article>
-    </section>
-
     <ErrorState
       v-if="isError"
       :description="getErrorMessage(error, 'Não foi possível carregar o dashboard.')"
@@ -154,8 +95,68 @@ function formatDate(value?: string) {
       @retry="refetch"
     />
 
-    <div v-else class="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-      <section class="rounded-card border border-white/70 bg-white p-6 shadow-card">
+    <template v-else>
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <template v-if="isLoading">
+          <div
+            v-for="i in 4"
+            :key="i"
+            class="rounded-card border border-white/70 bg-white p-5 shadow-card"
+          >
+            <div class="flex justify-between items-start">
+              <div class="flex-1 space-y-3">
+                <BaseSkeleton height="0.75rem" width="40%" rounded="md" />
+                <BaseSkeleton height="2.5rem" width="60%" rounded="lg" />
+                <BaseSkeleton height="0.375rem" width="100%" rounded="full" />
+              </div>
+              <BaseSkeleton height="2.75rem" width="2.75rem" rounded="2xl" />
+            </div>
+          </div>
+        </template>
+        <article
+          v-else
+          v-for="card in summaryCards"
+          :key="card.title"
+          class="rounded-card border border-white/70 bg-white p-5 shadow-card transition-all hover:shadow-lg"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <p class="text-xs font-bold uppercase tracking-wider text-neutral-400">{{ card.title }}</p>
+              <p
+                class="mt-2 font-display text-4xl font-extrabold tracking-[-0.02em] tabular-nums text-neutral-900"
+              >
+                {{ card.value }}
+              </p>
+              <div v-if="overview?.totalCount" class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
+                <div
+                  :class="{
+                    'bg-primary': card.tone === 'default',
+                    'bg-warning': card.tone === 'warning',
+                    'bg-accent': card.tone === 'info',
+                    'bg-success': card.tone === 'success',
+                  }"
+                  :style="{ width: `${(card.value / overview.totalCount) * 100}%` }"
+                  class="h-full transition-all duration-700 ease-out"
+                />
+              </div>
+            </div>
+            <div
+              :class="{
+                'bg-primary-soft text-primary': card.tone === 'default',
+                'bg-amber-50 text-warning': card.tone === 'warning',
+                'bg-cyan-50 text-accent': card.tone === 'info',
+                'bg-emerald-50 text-success': card.tone === 'success',
+              }"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm"
+            >
+              <component :is="card.icon" class="h-5 w-5" />
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <div class="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
+        <section class="rounded-card border border-white/70 bg-white p-6 shadow-card">
         <SectionHeader
           description="Últimas 5 tarefas atualizadas no sistema."
           title="Atividade recente"
@@ -217,9 +218,9 @@ function formatDate(value?: string) {
         >
           Nenhuma tarefa registrada ainda.
         </div>
-      </section>
+        </section>
 
-      <section class="rounded-card border border-white/70 bg-white p-6 shadow-card">
+        <section class="rounded-card border border-white/70 bg-white p-6 shadow-card">
         <SectionHeader
           description="Tarefas com vencimento nos próximos 3 dias."
           title="Prazos próximos"
@@ -263,7 +264,8 @@ function formatDate(value?: string) {
         >
           Nenhuma tarefa com vencimento imediato.
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </template>
   </PageLayout>
 </template>

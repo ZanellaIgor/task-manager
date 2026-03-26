@@ -4,6 +4,22 @@ export type TaskPriority = 'Low' | 'Medium' | 'High'
 
 export type SortDirection = 'Asc' | 'Desc'
 
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+    Pending: 'Pendente',
+    InProgress: 'Em andamento',
+    Completed: 'Concluída',
+    Cancelled: 'Cancelada',
+} as const
+
+export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
+    Low: 'Baixa',
+    Medium: 'Média',
+    High: 'Alta',
+} as const
+
+export const TASK_STATUSES = Object.keys(TASK_STATUS_LABELS) as TaskStatus[]
+export const TASK_PRIORITIES = Object.keys(TASK_PRIORITY_LABELS) as TaskPriority[]
+
 export interface ListParams {
     page?: number
     pageSize?: number

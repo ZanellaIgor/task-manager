@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, ref} from 'vue'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRoute, useRouter} from 'vue-router'
 import {Plus, RefreshCcw} from 'lucide-vue-next'
@@ -16,23 +16,13 @@ import BasePagination from '@/components/shared/BasePagination.vue'
 import EmptyState from '@/components/shared/EmptyState.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import ErrorState from '@/components/shared/ErrorState.vue'
-import {useToast} from '@/composables/useToast'
 import {ListTodo} from 'lucide-vue-next'
 import {useCategoryOptions} from '@/queries/categoryQueries'
-import {
-  useCancelTask,
-  useCompleteTask,
-  useCreateTask,
-  useDeleteTask,
-  useTask,
-  useTasks,
-  useUpdateTask,
-} from '@/queries/taskQueries'
+import {useTasks} from '@/queries/taskQueries'
 import {readQueryNumber, readQueryString, withQueryValue} from '@/router/query'
-import {type TaskFormData} from '@/schemas/taskSchema'
 import {getErrorMessage} from '@/services/api'
-import {useTaskStore} from '@/stores/tasks'
-import type {Task, TaskFilters as TaskQueryFilters, TaskPriority, TaskStatus} from '@/types'
+import {useTaskCrud} from '@/composables/useTaskCrud'
+import type {TaskFilters as TaskQueryFilters, TaskPriority, TaskStatus} from '@/types'
 
 interface TaskFiltersValue {
   status?: TaskStatus | ''
@@ -45,11 +35,24 @@ const PAGE_SIZE = 9
 
 const route = useRoute()
 const router = useRouter()
-const store = useTaskStore()
-const toast = useToast()
 const sidebarOpen = ref(false)
-const isConfirmingDelete = ref(false)
-const taskToDelete = ref<number | null>(null)
+
+const {
+  store,
+  editingQuery,
+  submitting,
+  submitError,
+  isConfirmingDelete,
+  deleteTask,
+  completingTaskId,
+  cancellingTaskId,
+  handleSubmit,
+  handleComplete,
+  handleCancel,
+  confirmDelete,
+  handleDelete,
+  initialValues,
+} = useTaskCrud()
 
 const filtersModel = computed<TaskFiltersValue>(() => {
   const categoryId = readQueryNumber(route.query, 'categoryId', 0)
@@ -82,33 +85,11 @@ const taskFilters = computed<TaskQueryFilters>(() => ({
 
 const {data: tasksPage, isLoading, isError, error, refetch, isFetching} = useTasks(taskFilters)
 const categoryOptionsQuery = useCategoryOptions()
-const editingId = computed(() => store.editingTaskId)
-const editingQuery = useTask(editingId)
-
-const createTask = useCreateTask()
-const updateTask = useUpdateTask()
-const completeTask = useCompleteTask()
-const cancelTask = useCancelTask()
-const deleteTask = useDeleteTask()
-
-const submitting = computed(
-  () => createTask.isPending.value || updateTask.isPending.value || editingQuery.isLoading.value,
-)
 
 const tasks = computed(() => tasksPage.value?.items ?? [])
 const totalItems = computed(() => tasksPage.value?.totalItems ?? 0)
 const totalPages = computed(() => tasksPage.value?.totalPages ?? 0)
 const currentPage = computed(() => tasksPage.value?.page ?? taskFilters.value.page ?? 1)
-const submitError = ref<string | null>(null)
-
-watch(
-  () => store.isFormOpen,
-  (isOpen) => {
-    if (!isOpen) {
-      submitError.value = null
-    }
-  },
-)
 
 function buildQuery(nextFilters: TaskFiltersValue, page = 1) {
   const query: LocationQueryRaw = {}
@@ -144,80 +125,13 @@ async function goToPage(page: number) {
   await router.replace({query: buildQuery(filtersModel.value, page)})
 }
 
-async function handleSubmit(values: TaskFormData) {
-  submitError.value = null
-
-  try {
-    if (store.editingTaskId) {
-      await updateTask.mutateAsync({id: store.editingTaskId, data: values})
-      toast.success('Tarefa atualizada com sucesso.')
-    } else {
-      await createTask.mutateAsync(values)
-      toast.success('Tarefa criada com sucesso.')
-    }
-
-    store.closeForm()
-  } catch (cause) {
-    const message = getErrorMessage(cause, 'Não foi possível salvar a tarefa.')
-    submitError.value = message
-    toast.error(message)
-  }
-}
-
-async function handleComplete(taskId: number) {
-  try {
-    await completeTask.mutateAsync(taskId)
-    toast.success('Tarefa marcada como concluída.')
-  } catch (cause) {
-    toast.error(getErrorMessage(cause, 'Não foi possível concluir a tarefa.'))
-  }
-}
-
-async function handleCancel(taskId: number) {
-  try {
-    await cancelTask.mutateAsync(taskId)
-    toast.info('Tarefa cancelada.')
-  } catch (cause) {
-    toast.error(getErrorMessage(cause, 'Não foi possível cancelar a tarefa.'))
-  }
-}
-
-function confirmDelete(taskId: number) {
-  taskToDelete.value = taskId
-  isConfirmingDelete.value = true
-}
-
-async function handleDelete() {
-  if (!taskToDelete.value) return
-
-  try {
-    await deleteTask.mutateAsync(taskToDelete.value)
-    toast.success('Tarefa excluída.')
-  } catch (cause) {
-    toast.error(getErrorMessage(cause, 'Não foi possível excluir a tarefa.'))
-  } finally {
-    isConfirmingDelete.value = false
-    taskToDelete.value = null
-  }
-}
-
-function initialValues(task?: Task | null): Partial<TaskFormData> | undefined {
-  if (!task) {
-    return undefined
-  }
-
-  return {
-    title: task.title,
-    description: task.description ?? '',
-    categoryId: task.categoryId,
-    priority: task.priority,
-    dueDate: task.dueDate ? task.dueDate.slice(0, 10) : '',
-  }
-}
+onBeforeUnmount(() => {
+  clearTimeout(filtersTimeout)
+})
 </script>
 
 <template>
-  <PageLayout>
+  <PageLayout lock-viewport>
     <template #sidebar>
       <AppSidebar :model-value="sidebarOpen" @update:model-value="sidebarOpen = $event" />
     </template>
@@ -230,7 +144,7 @@ function initialValues(task?: Task | null): Partial<TaskFormData> | undefined {
       >
         <template #actions>
           <div class="flex items-center gap-2.5">
-            <BaseButton :disabled="isFetching" variant="secondary" @click="refetch()">
+            <BaseButton :disabled="isFetching" :loading="isFetching" variant="soft" @click="refetch()">
               <RefreshCcw :class="isFetching && 'animate-spin'" class="h-3.5 w-3.5" />
               Atualizar
             </BaseButton>
@@ -243,76 +157,93 @@ function initialValues(task?: Task | null): Partial<TaskFormData> | undefined {
       </AppHeader>
     </template>
 
-    <TaskFilters
-      :categories="categoryOptionsQuery.data.value ?? []"
-      :loading="isFetching || categoryOptionsQuery.isLoading.value"
-      :model-value="filtersModel"
-      :total-results="totalItems"
-      @clear="clearFilters"
-      @update:model-value="updateFilters"
-    />
-
-    <ErrorState
-      v-if="isError"
-      :description="getErrorMessage(error, 'Verifique a conexão e tente novamente.')"
-      show-retry
-      title="Falha ao carregar tarefas"
-      @retry="refetch"
-    />
-
-    <section v-else-if="isLoading" class="grid gap-3.5 lg:grid-cols-2 2xl:grid-cols-3">
-      <TaskCardSkeleton
-        v-for="index in PAGE_SIZE"
-        :key="index"
+    <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
+      <TaskFilters
+        :categories="categoryOptionsQuery.data.value ?? []"
+        :loading="isFetching || categoryOptionsQuery.isLoading.value"
+        :model-value="filtersModel"
+        :total-results="totalItems"
+        class="shrink-0"
+        @clear="clearFilters"
+        @update:model-value="updateFilters"
       />
-    </section>
 
-    <template v-else-if="tasks.length">
-      <TransitionGroup
-        class="grid gap-3.5 lg:grid-cols-2 2xl:grid-cols-3"
-        name="list"
-        tag="section"
-      >
-        <TaskCard
-          v-for="task in tasks"
-          :key="task.id"
-          :task="task"
-          @cancel="handleCancel(task.id)"
-          @complete="handleComplete(task.id)"
-          @delete="confirmDelete(task.id)"
-          @edit="store.openEdit(task.id)"
-        />
-      </TransitionGroup>
-
-      <BasePagination
-        :disabled="isFetching"
-        :page="currentPage"
-        :page-size="tasksPage?.pageSize ?? PAGE_SIZE"
-        :total-items="totalItems"
-        :total-pages="totalPages"
-        @update:page="goToPage"
+      <ErrorState
+        v-if="isError"
+        :description="getErrorMessage(error, 'Verifique a conexão e tente novamente.')"
+        show-retry
+        title="Falha ao carregar tarefas"
+        @retry="refetch"
       />
-    </template>
 
-    <section
-      v-else
-      class="rounded-card border border-dashed border-neutral-200 bg-white shadow-card"
-    >
-      <EmptyState
-        :icon="ListTodo"
-        :description="hasActiveFilters ? 'Nenhuma tarefa corresponde aos filtros selecionados.' : 'Crie a primeira tarefa para começar a organizar seu dia.'"
-        title="Nenhuma tarefa encontrada"
+      <section
+        v-else-if="isLoading"
+        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
       >
-        <template #actions>
-          <div class="flex flex-wrap items-center justify-center gap-3">
-            <BaseButton v-if="hasActiveFilters" variant="secondary" @click="clearFilters">
-              Limpar filtros
-            </BaseButton>
-            <BaseButton @click="store.openCreate()">Nova tarefa</BaseButton>
-          </div>
-        </template>
-      </EmptyState>
-    </section>
+        <div class="grid flex-1 content-start gap-3.5 overflow-y-auto p-4 sm:p-6 lg:grid-cols-2 2xl:grid-cols-3">
+          <TaskCardSkeleton
+            v-for="index in PAGE_SIZE"
+            :key="index"
+          />
+        </div>
+      </section>
+
+      <section
+        v-else-if="tasks.length"
+        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
+      >
+        <div class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+          <TransitionGroup
+            class="grid auto-rows-max gap-3.5 lg:grid-cols-2 2xl:grid-cols-3"
+            name="list"
+            tag="div"
+          >
+            <TaskCard
+              v-for="task in tasks"
+              :key="task.id"
+              :loading-cancel="cancellingTaskId === task.id"
+              :loading-complete="completingTaskId === task.id"
+              :task="task"
+              @cancel="handleCancel(task.id)"
+              @complete="handleComplete(task.id)"
+              @delete="confirmDelete(task.id)"
+              @edit="store.openEdit(task.id)"
+            />
+          </TransitionGroup>
+        </div>
+
+        <div class="shrink-0 border-t border-neutral-100 px-4 py-4 sm:px-6">
+          <BasePagination
+            :disabled="isFetching"
+            :page="currentPage"
+            :page-size="tasksPage?.pageSize ?? PAGE_SIZE"
+            :total-items="totalItems"
+            :total-pages="totalPages"
+            @update:page="goToPage"
+          />
+        </div>
+      </section>
+
+      <section
+        v-else
+        class="flex flex-1 items-center rounded-card border border-dashed border-neutral-200 bg-white shadow-card"
+      >
+        <EmptyState
+          :icon="ListTodo"
+          :description="hasActiveFilters ? 'Nenhuma tarefa corresponde aos filtros selecionados.' : 'Crie a primeira tarefa para começar a organizar seu dia.'"
+          title="Nenhuma tarefa encontrada"
+        >
+          <template #actions>
+            <div class="flex flex-wrap items-center justify-center gap-3">
+              <BaseButton v-if="hasActiveFilters" variant="secondary" @click="clearFilters">
+                Limpar filtros
+              </BaseButton>
+              <BaseButton @click="store.openCreate()">Nova tarefa</BaseButton>
+            </div>
+          </template>
+        </EmptyState>
+      </section>
+    </div>
 
     <ConfirmDialog
       v-model="isConfirmingDelete"
