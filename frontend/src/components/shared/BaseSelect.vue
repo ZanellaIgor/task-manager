@@ -176,6 +176,7 @@ function onKeydown(event: KeyboardEvent) {
     case 'Escape':
       if (isOpen.value) {
         event.preventDefault()
+        event.stopPropagation()
         close()
         triggerRef.value?.focus()
       }
@@ -253,34 +254,32 @@ const triggerClasses = computed(() => [
       <span v-if="required" class="ml-0.5 text-danger">*</span>
     </label>
 
-    <div class="relative">
-      <button
-          :id="inputId"
-          ref="triggerRef"
-          :aria-describedby="helpText || error ? `${inputId}-meta` : undefined"
-          :aria-expanded="isOpen"
-          :aria-invalid="Boolean(error) || undefined"
-          :class="triggerClasses"
-          :disabled="disabled"
-          :name="name"
-          aria-haspopup="listbox"
-          role="combobox"
-          type="button"
-          @blur="$emit('blur', $event)"
-          @click="toggle"
-          @focus="$emit('focus', $event)"
-          @keydown="onKeydown"
-      >
-        <span :class="isPlaceholder ? 'text-neutral-500' : 'text-neutral-900'" class="truncate">
-          {{ displayLabel }}
-        </span>
-        <ChevronDown
-            :class="isOpen && 'rotate-180'"
-            :size="16"
-            class="shrink-0 text-neutral-400 transition-transform duration-200"
-        />
-      </button>
-    </div>
+    <button
+        :id="inputId"
+        ref="triggerRef"
+        :aria-describedby="helpText || error ? `${inputId}-meta` : undefined"
+        :aria-expanded="isOpen"
+        :aria-invalid="Boolean(error) || undefined"
+        :class="triggerClasses"
+        :disabled="disabled"
+        :name="name"
+        aria-haspopup="listbox"
+        role="combobox"
+        type="button"
+        @blur="$emit('blur', $event)"
+        @click="toggle"
+        @focus="$emit('focus', $event)"
+        @keydown="onKeydown"
+    >
+      <span :class="isPlaceholder ? 'text-neutral-500' : 'text-neutral-900'" class="truncate">
+        {{ displayLabel }}
+      </span>
+      <ChevronDown
+          :class="isOpen && 'rotate-180'"
+          :size="16"
+          class="shrink-0 text-neutral-400 transition-transform duration-200"
+      />
+    </button>
 
     <p
         v-if="error || helpText"

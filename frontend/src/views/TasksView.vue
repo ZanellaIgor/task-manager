@@ -277,10 +277,9 @@ onBeforeUnmount(() => {
     </BaseModal>
 
     <BaseModal
-      description="Consulte os dados completos da tarefa e, se necessário, siga para a edição."
       :model-value="store.isViewOpen"
       size="lg"
-      title="Visualizar tarefa"
+      title="Detalhes da tarefa"
       @update:model-value="(value) => (!value ? store.closeView() : undefined)"
     >
       <div v-if="viewingQuery.isLoading.value" class="grid gap-5">

@@ -3,10 +3,6 @@
 Aplicação full stack para gestão de tarefas, composta por um frontend em Vue 3 + TypeScript e uma API REST em ASP.NET
 Core 8 com SQLite.
 
-As especificações originais usadas na implementação estão
-em [docs/vite.md](docs/vite.md)
-e [docs/aspnet.md](docs/aspnet.md).
-
 ## Stack
 
 **Frontend**
@@ -67,6 +63,8 @@ e [docs/aspnet.md](docs/aspnet.md).
 ![Lista de tarefas](public/list-task.png)
 
 ![Nova tarefa](public/form-task.png)
+
+![Visualização de tarefa](public/view-task.png)
 
 ![Lista de tarefas no mobile](public/list-task-mob.png)
 
