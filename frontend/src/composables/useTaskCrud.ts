@@ -25,6 +25,8 @@ export function useTaskCrud() {
 
   const editingId = computed(() => store.editingTaskId)
   const editingQuery = useTask(editingId)
+  const viewingId = computed(() => store.viewingTaskId)
+  const viewingQuery = useTask(viewingId)
 
   const submitting = computed(
     () => createTask.isPending.value || updateTask.isPending.value || editingQuery.isLoading.value,
@@ -125,6 +127,7 @@ export function useTaskCrud() {
   return {
     store,
     editingQuery,
+    viewingQuery,
     submitting,
     submitError,
     isConfirmingDelete,

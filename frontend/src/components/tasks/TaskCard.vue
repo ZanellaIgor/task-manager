@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {computed} from 'vue'
-import {Ban, CalendarDays, CheckCheck, CircleAlert, PencilLine, Trash2} from 'lucide-vue-next'
+import {Ban, CalendarDays, CheckCheck, CircleAlert, Eye, PencilLine, Trash2} from 'lucide-vue-next'
 import BaseBadge from '@/components/shared/BaseBadge.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import type {Task, TaskPriority} from '@/types'
@@ -14,6 +14,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
+  view: []
   edit: []
   complete: []
   cancel: []
@@ -137,6 +138,15 @@ const statusVariant = computed(() => {
       <div class="flex items-center gap-1 border-t border-neutral-100 -mx-4 -mb-4 px-3 py-2 bg-neutral-50/50">
         <template v-if="!isTerminal">
           <BaseButton
+              aria-label="Visualizar tarefa"
+              size="sm"
+              variant="ghost"
+              @click="emit('view')"
+          >
+            <Eye :size="14" aria-hidden="true"/>
+          </BaseButton>
+
+          <BaseButton
               v-if="task.status !== 'Completed'"
               :disabled="loadingComplete"
               :loading="loadingComplete"
@@ -180,6 +190,15 @@ const statusVariant = computed(() => {
         >
           {{ task.status === 'Completed' ? '✓ Concluída' : '✕ Cancelada' }}
         </span>
+
+        <BaseButton
+            aria-label="Visualizar tarefa"
+            size="sm"
+            variant="ghost"
+            @click="emit('view')"
+        >
+          <Eye :size="14" aria-hidden="true"/>
+        </BaseButton>
 
         <BaseButton
             aria-label="Excluir tarefa"

@@ -40,6 +40,7 @@ e [docs/aspnet.md](docs/aspnet.md).
 │   ├── TaskManager.Infrastructure/
 │   └── TaskManager.slnx
 ├── frontend/
+├── public/
 └── docs/
 ```
 
@@ -54,6 +55,26 @@ e [docs/aspnet.md](docs/aspnet.md).
 - Swagger para documentação e teste da API
 - Tratamento centralizado de erros com `ProblemDetails` e `traceId`
 - Dashboard consumindo endpoint próprio de overview
+
+## Telas do sistema
+
+### Dashboard
+
+![Dashboard](public/dashboard.png)
+
+### Tarefas
+
+![Lista de tarefas](public/list-task.png)
+
+![Nova tarefa](public/form-task.png)
+
+![Lista de tarefas no mobile](public/list-task-mob.png)
+
+### Categorias
+
+![Lista de categorias](public/list-categories.png)
+
+![Formulário de categorias](public/form-categories.png)
 
 ## Como rodar
 

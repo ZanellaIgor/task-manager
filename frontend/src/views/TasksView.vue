@@ -8,6 +8,7 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import PageLayout from '@/components/layout/PageLayout.vue'
 import TaskCard from '@/components/tasks/TaskCard.vue'
 import TaskCardSkeleton from '@/components/tasks/TaskCardSkeleton.vue'
+import TaskDetailsView from '@/components/tasks/TaskDetailsView.vue'
 import TaskFilters from '@/components/tasks/TaskFilters.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
@@ -16,6 +17,7 @@ import BasePagination from '@/components/shared/BasePagination.vue'
 import EmptyState from '@/components/shared/EmptyState.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import ErrorState from '@/components/shared/ErrorState.vue'
+import BaseSkeleton from '@/components/shared/BaseSkeleton.vue'
 import {useCategoryOptions} from '@/queries/categoryQueries'
 import {useTasks} from '@/queries/taskQueries'
 import {readQueryNumber, readQueryString, withQueryValue} from '@/router/query'
@@ -39,6 +41,7 @@ const sidebarOpen = ref(false)
 const {
   store,
   editingQuery,
+  viewingQuery,
   submitting,
   submitError,
   isConfirmingDelete,
@@ -206,6 +209,7 @@ onBeforeUnmount(() => {
               @complete="handleComplete(task.id)"
               @delete="confirmDelete(task.id)"
               @edit="store.openEdit(task.id)"
+              @view="store.openView(task.id)"
             />
           </TransitionGroup>
         </div>
@@ -269,6 +273,47 @@ onBeforeUnmount(() => {
         :server-error="submitError"
         @cancel="store.closeForm()"
         @submit="handleSubmit"
+      />
+    </BaseModal>
+
+    <BaseModal
+      description="Consulte os dados completos da tarefa e, se necessário, siga para a edição."
+      :model-value="store.isViewOpen"
+      size="lg"
+      title="Visualizar tarefa"
+      @update:model-value="(value) => (!value ? store.closeView() : undefined)"
+    >
+      <div v-if="viewingQuery.isLoading.value" class="grid gap-5">
+        <div class="rounded-2xl border border-neutral-200 bg-neutral-50/70 px-4 py-4">
+          <BaseSkeleton height="0.75rem" rounded="md" width="28%" />
+          <BaseSkeleton class="mt-3" height="1.4rem" rounded="md" width="55%" />
+        </div>
+        <div class="grid gap-4">
+          <BaseSkeleton height="4.25rem" rounded="xl" width="100%" />
+          <BaseSkeleton height="8rem" rounded="xl" width="100%" />
+          <div class="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+            <BaseSkeleton height="4.25rem" rounded="xl" width="100%" />
+            <BaseSkeleton height="4.25rem" rounded="xl" width="100%" />
+            <BaseSkeleton height="4.25rem" rounded="xl" width="100%" />
+            <BaseSkeleton height="4.25rem" rounded="xl" width="100%" />
+          </div>
+        </div>
+      </div>
+
+      <ErrorState
+        v-else-if="viewingQuery.isError.value"
+        :description="getErrorMessage(viewingQuery.error.value, 'Não foi possível carregar os detalhes da tarefa.')"
+        compact
+        show-retry
+        title="Falha ao carregar tarefa"
+        @retry="viewingQuery.refetch()"
+      />
+
+      <TaskDetailsView
+        v-else-if="viewingQuery.data.value"
+        :task="viewingQuery.data.value"
+        @close="store.closeView()"
+        @edit="store.openEdit(viewingQuery.data.value.id)"
       />
     </BaseModal>
   </PageLayout>
