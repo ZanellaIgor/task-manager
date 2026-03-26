@@ -2,7 +2,7 @@
 import {computed, onBeforeUnmount, ref} from 'vue'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRoute, useRouter} from 'vue-router'
-import {Plus, RefreshCcw} from 'lucide-vue-next'
+import {ListTodo, Plus, RefreshCcw} from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import PageLayout from '@/components/layout/PageLayout.vue'
@@ -16,7 +16,6 @@ import BasePagination from '@/components/shared/BasePagination.vue'
 import EmptyState from '@/components/shared/EmptyState.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import ErrorState from '@/components/shared/ErrorState.vue'
-import {ListTodo} from 'lucide-vue-next'
 import {useCategoryOptions} from '@/queries/categoryQueries'
 import {useTasks} from '@/queries/taskQueries'
 import {readQueryNumber, readQueryString, withQueryValue} from '@/router/query'
@@ -162,7 +161,6 @@ onBeforeUnmount(() => {
         :categories="categoryOptionsQuery.data.value ?? []"
         :loading="isFetching || categoryOptionsQuery.isLoading.value"
         :model-value="filtersModel"
-        :total-results="totalItems"
         class="shrink-0"
         @clear="clearFilters"
         @update:model-value="updateFilters"

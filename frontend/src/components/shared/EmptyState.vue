@@ -29,7 +29,7 @@ const props = withDefaults(
     </div>
 
     <!-- Text -->
-    <p class="text-[1.05rem] font-bold text-neutral-900">{{ title }}</p>
+    <p class="text-base font-bold text-neutral-900">{{ title }}</p>
     <p v-if="description" class="mt-1.5 max-w-xs text-sm text-neutral-400 leading-relaxed">
       {{ description }}
     </p>

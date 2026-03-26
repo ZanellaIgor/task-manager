@@ -11,14 +11,14 @@ const iconByType: Record<ToastMessage['type'], typeof CheckCircle2> = {
 }
 
 const styleByType: Record<ToastMessage['type'], string> = {
-  success: 'border-emerald-200 bg-white text-emerald-700',
-  error:   'border-red-200 bg-white text-red-700',
+  success: 'border-success-border bg-white text-success-text',
+  error:   'border-danger-border bg-white text-danger-text',
   info:    'border-primary/20 bg-white text-primary',
 }
 
 const iconStyleByType: Record<ToastMessage['type'], string> = {
-  success: 'text-emerald-500',
-  error:   'text-red-500',
+  success: 'text-success',
+  error:   'text-danger',
   info:    'text-primary',
 }
 </script>
@@ -46,7 +46,7 @@ const iconStyleByType: Record<ToastMessage['type'], string> = {
               aria-hidden="true"
               class="mt-0.5 shrink-0"
           />
-          <p class="flex-1 text-[0.875rem] font-medium text-neutral-800 leading-[1.4]">
+          <p class="flex-1 text-sm font-medium text-neutral-800 leading-[1.4]">
             {{ toast.message }}
           </p>
           <button

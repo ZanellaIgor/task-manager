@@ -87,13 +87,13 @@ onBeforeUnmount(() => {
               >
                 {{ title }}
               </h2>
-              <p v-if="description" class="mt-1.5 text-[0.9rem] leading-normal text-neutral-600">
+              <p v-if="description" class="mt-1.5 text-[0.9375rem] leading-normal text-neutral-600">
                 {{ description }}
               </p>
             </div>
             <button
                 aria-label="Close modal"
-                class="grid size-9 shrink-0 place-items-center rounded-full border border-neutral-400/20 bg-neutral-50 text-neutral-900 cursor-pointer transition-colors hover:bg-neutral-100"
+                class="grid size-11 shrink-0 place-items-center rounded-full border border-neutral-400/20 bg-neutral-50 text-neutral-900 cursor-pointer transition-colors hover:bg-neutral-100 sm:size-9"
                 type="button"
                 @click="close"
             >

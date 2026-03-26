@@ -33,11 +33,11 @@ const statusConfig = computed(() => {
 const priorityConfig = computed(() => {
   switch (props.priority) {
     case 'High':
-      return {label: 'Alta', dot: 'bg-red-500'}
+      return {label: 'Alta', dot: 'bg-danger'}
     case 'Low':
-      return {label: 'Baixa', dot: 'bg-emerald-500'}
+      return {label: 'Baixa', dot: 'bg-success'}
     case 'Medium':
-      return {label: 'Média', dot: 'bg-amber-400'}
+      return {label: 'Média', dot: 'bg-warning'}
     default:
       return null
   }

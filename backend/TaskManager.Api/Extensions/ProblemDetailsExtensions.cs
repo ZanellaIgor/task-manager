@@ -38,13 +38,14 @@ public static class ProblemDetailsExtensions
         var problemDetails = new ValidationProblemDetails(errors)
         {
             Status = status,
-            Title = "Validation failed.",
-            Detail = "One or more validation errors occurred.",
+            Title = "Falha de validação.",
+            Detail = "Um ou mais erros de validação ocorreram.",
             Type = $"https://httpstatuses.com/{status}",
             Instance = context.Request.Path,
         };
 
         problemDetails.Extensions["traceId"] = context.TraceIdentifier;
+        problemDetails.Extensions["code"] = "validation_error";
         return problemDetails;
     }
 }

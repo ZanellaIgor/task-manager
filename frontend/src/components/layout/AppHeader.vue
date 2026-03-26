@@ -26,11 +26,11 @@ const hasActionsSlot = computed(() => Boolean(slots.actions || slots.default))
 
 <template>
   <header
-      class="flex items-center justify-between gap-4 px-6 py-3 border-b border-neutral-200 bg-white shadow-sm max-[960px]:flex-wrap max-[960px]:items-start"
+      class="flex items-center justify-between gap-4 px-6 py-3 border-b border-neutral-200 bg-white shadow-sm max-lg:flex-wrap max-lg:items-start"
   >
     <div class="flex items-center gap-3.5 min-w-0">
       <BaseButton
-          class="inline-flex min-[721px]:hidden"
+          class="inline-flex lg:hidden"
           size="sm"
           variant="secondary"
           @click="emit('toggle-sidebar')"
@@ -44,7 +44,7 @@ const hasActionsSlot = computed(() => Boolean(slots.actions || slots.default))
         </h1>
         <p
             v-if="props.description || props.subtitle"
-            class="mt-1 text-[0.84rem] leading-normal text-neutral-500"
+            class="mt-1 text-[0.8125rem] leading-normal text-neutral-500"
         >
           {{ props.description || props.subtitle }}
         </p>
@@ -53,9 +53,9 @@ const hasActionsSlot = computed(() => Boolean(slots.actions || slots.default))
 
     <div
         v-if="hasSearchSlot || hasActionsSlot"
-        class="flex items-center gap-3 ml-auto max-[960px]:w-full max-[960px]:ml-0 max-[960px]:justify-between"
+        class="flex items-center gap-3 ml-auto max-lg:w-full max-lg:ml-0 max-lg:justify-between"
     >
-      <div v-if="hasSearchSlot" class="relative flex items-center max-[960px]:flex-1">
+      <div v-if="hasSearchSlot" class="relative flex items-center max-lg:flex-1">
         <Search :size="16" class="absolute left-4 text-neutral-400 pointer-events-none"/>
         <slot name="search"/>
       </div>
@@ -72,7 +72,7 @@ header :deep(.relative input) {
   padding-left: 2.3rem;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1023px) {
   header :deep(.relative input) {
     min-width: 0;
     width: 100%;

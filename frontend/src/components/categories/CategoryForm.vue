@@ -40,7 +40,7 @@ const validationSchema = computed(() => {
         ctx.addIssue({
           code: 'custom',
           path: ['name'],
-          message: 'Ja existe uma categoria com esse nome.',
+          message: 'Já existe uma categoria com esse nome.',
         })
       }
     }),
@@ -88,7 +88,7 @@ const onSubmit = handleSubmit((values) => {
           :disabled="loading"
           :error="errors.name"
           label="Nome"
-          placeholder="Ex.: Operacoes"
+          placeholder="Ex.: Operações"
           required
           v-bind="nameAttrs"
       />
@@ -97,13 +97,13 @@ const onSubmit = handleSubmit((values) => {
           v-model="description"
           :disabled="loading"
           :error="errors.description"
-          label="Descricao"
+          label="Descrição"
           placeholder="Resumo curto para orientar o uso da categoria"
           v-bind="descriptionAttrs"
       />
     </div>
 
-    <p v-if="serverError" class="text-[0.92rem] font-semibold text-red-600">
+    <p v-if="serverError" class="text-[0.9375rem] font-semibold text-danger-text">
       {{ serverError }}
     </p>
 

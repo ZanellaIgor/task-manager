@@ -26,9 +26,9 @@ const props = withDefaults(
 )
 
 const sizeMap: Record<Size, string> = {
-  sm: 'h-8 px-3 text-sm',
-  md: 'h-9 px-3.5 text-[0.9375rem]',
-  lg: 'h-10 px-5 text-base',
+  sm: 'h-9 px-3 text-sm sm:h-8',
+  md: 'h-11 px-3.5 text-[0.9375rem] sm:h-9',
+  lg: 'h-12 px-5 text-base sm:h-10',
 }
 
 const variantMap: Record<Variant, string> = {
@@ -37,9 +37,9 @@ const variantMap: Record<Variant, string> = {
   secondary:
       'bg-white text-neutral-700 border-neutral-300 shadow-[0_1px_2px_rgba(15,23,42,0.06)] hover:bg-neutral-50 hover:border-neutral-400',
   soft:
-      'bg-primary-soft text-primary border-transparent shadow-none hover:bg-[#dfe7ff] hover:text-primary-dark',
+      'bg-primary-soft text-primary border-transparent shadow-none hover:bg-primary-soft-hover hover:text-primary-dark',
   ghost: 'bg-transparent text-neutral-600 border-neutral-200 hover:bg-neutral-100 hover:text-neutral-800',
-  danger: 'bg-red-600 text-white border-red-600 shadow-[0_4px_12px_rgba(220,38,38,0.20)] hover:bg-red-700',
+  danger: 'bg-danger text-white border-danger shadow-[0_4px_12px_rgba(220,38,38,0.20)] hover:brightness-90',
 }
 
 const classes = computed(() => [
@@ -51,7 +51,7 @@ const classes = computed(() => [
   variantMap[props.variant],
   props.fullWidth && 'w-full',
   props.disabled || props.loading
-      ? 'cursor-not-allowed opacity-65'
+      ? 'cursor-not-allowed opacity-50'
       : 'hover:-translate-y-px',
 ])
 </script>

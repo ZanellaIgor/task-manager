@@ -90,7 +90,7 @@ const onSubmit = handleSubmit((values) => {
           v-model="title"
           :disabled="loading"
           :error="errors.title"
-          label="Titulo"
+          label="Título"
           placeholder="Ex.: Revisar backlog da sprint"
           required
           v-bind="titleAttrs"
@@ -101,7 +101,7 @@ const onSubmit = handleSubmit((values) => {
           :disabled="loading"
           :error="errors.description"
           :rows="5"
-          label="Descricao"
+          label="Descrição"
           placeholder="Descreva o contexto da tarefa"
           textarea
           v-bind="descriptionAttrs"
@@ -125,7 +125,7 @@ const onSubmit = handleSubmit((values) => {
             :error="errors.priority"
             :options="[
             { label: 'Baixa', value: 'Low' },
-            { label: 'Media', value: 'Medium' },
+            { label: 'Média', value: 'Medium' },
             { label: 'Alta', value: 'High' },
           ]"
             label="Prioridade"
@@ -143,7 +143,7 @@ const onSubmit = handleSubmit((values) => {
       />
     </div>
 
-    <p v-if="serverError" class="text-[0.92rem] font-semibold text-red-600">
+    <p v-if="serverError" class="text-[0.9375rem] font-semibold text-danger-text">
       {{ serverError }}
     </p>
 

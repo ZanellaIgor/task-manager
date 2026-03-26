@@ -49,7 +49,7 @@ function handleConfirm() {
     <div class="flex flex-col items-center gap-4 py-2 text-center">
       <!-- Icon -->
       <div
-          :class="variant === 'danger' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'"
+          :class="variant === 'danger' ? 'bg-danger-soft text-danger-text' : 'bg-warning-soft text-warning-text'"
           class="flex h-12 w-12 items-center justify-center rounded-full"
       >
         <AlertTriangle :size="22" aria-hidden="true"/>
@@ -57,7 +57,7 @@ function handleConfirm() {
 
       <!-- Text -->
       <div>
-        <h3 class="text-[1.05rem] font-bold text-neutral-900">{{ title }}</h3>
+        <h3 class="text-base font-bold text-neutral-900">{{ title }}</h3>
         <p class="mt-1.5 text-sm text-neutral-500 leading-relaxed max-w-[20rem]">{{ description }}</p>
       </div>
 

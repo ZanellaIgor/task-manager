@@ -9,6 +9,7 @@ using TaskManager.Application.Mappings;
 using TaskManager.Api.Options;
 using TaskManager.Infrastructure.Data;
 using TaskManager.Infrastructure.Repositories;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,6 +56,14 @@ public static class ServiceCollectionExtensions
 
         services.AddValidatorsFromAssemblyContaining<CreateTaskValidator>();
         services.AddFluentValidationAutoValidation();
+        services.AddHealthChecks();
+        services.AddHttpLogging(options =>
+        {
+            options.LoggingFields = HttpLoggingFields.RequestMethod
+                | HttpLoggingFields.RequestPath
+                | HttpLoggingFields.ResponseStatusCode
+                | HttpLoggingFields.Duration;
+        });
 
         services.AddCors(options =>
         {
@@ -82,7 +91,9 @@ public static class ServiceCollectionExtensions
                         entry => entry.Value!.Errors.Select(error => error.ErrorMessage).ToArray());
 
                 var problemDetails = ProblemDetailsExtensions.CreateValidationProblemDetails(context.HttpContext, errors);
-                return new BadRequestObjectResult(problemDetails);
+                var result = new BadRequestObjectResult(problemDetails);
+                result.ContentTypes.Add("application/problem+json");
+                return result;
             };
         });
 

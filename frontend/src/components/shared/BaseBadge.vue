@@ -16,13 +16,13 @@ const props = withDefaults(defineProps<Props>(), {
 const variantClasses = computed(() => {
   switch (props.variant) {
     case 'success':
-      return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+      return 'bg-success-soft text-success-text border-success-border'
     case 'warning':
-      return 'bg-amber-50 text-amber-700 border-amber-200'
+      return 'bg-warning-soft text-warning-text border-warning-border'
     case 'danger':
-      return 'bg-rose-50 text-rose-700 border-rose-200'
+      return 'bg-danger-soft text-danger-text border-danger-border'
     case 'info':
-      return 'bg-cyan-50 text-cyan-700 border-cyan-200'
+      return 'bg-info-soft text-info-text border-info-border'
     case 'neutral':
       return 'bg-neutral-100 text-neutral-600 border-neutral-200'
     default:
@@ -31,7 +31,7 @@ const variantClasses = computed(() => {
 })
 
 const sizeClasses = computed(() => {
-  return props.size === 'sm' ? 'px-1.5 py-0.5 text-[0.65rem]' : 'px-2 py-0.5 text-[0.75rem]'
+  return props.size === 'sm' ? 'px-1.5 py-0.5 text-[0.625rem]' : 'px-2 py-0.5 text-xs'
 })
 
 const roundedClasses = computed(() => {

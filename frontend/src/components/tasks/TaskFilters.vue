@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import {computed} from 'vue'
-import {Search, X} from 'lucide-vue-next'
+import {computed, ref} from 'vue'
+import {Filter, Search, X} from 'lucide-vue-next'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseInput from '@/components/shared/BaseInput.vue'
+import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseSelect from '@/components/shared/BaseSelect.vue'
 import {
   TASK_STATUS_LABELS,
@@ -31,13 +32,11 @@ const props = withDefaults(
     modelValue?: TaskFiltersValue
     categories?: CategoryOption[]
     loading?: boolean
-    totalResults?: number
   }>(),
   {
     modelValue: () => ({}),
     categories: () => [],
     loading: false,
-    totalResults: 0,
   },
 )
 
@@ -46,8 +45,10 @@ const emit = defineEmits<{
   clear: []
 }>()
 
+const mobileFiltersOpen = ref(false)
+
 const statusOptions = [
-  {label: 'Todas as situacoes', value: ''},
+  {label: 'Todas as situações', value: ''},
   ...TASK_STATUSES.map((s) => ({label: TASK_STATUS_LABELS[s], value: s})),
 ]
 
@@ -75,8 +76,22 @@ const hasActiveFilters = computed(() =>
   ),
 )
 
+const hasActiveSelectFilters = computed(() =>
+  Boolean(
+    filters.value.status ||
+    filters.value.priority ||
+    filters.value.categoryId,
+  ),
+)
+
 const activeFiltersCount = computed(() =>
   [filters.value.status, filters.value.priority, filters.value.categoryId, filters.value.search].filter(
+    (v) => v !== '' && v !== undefined,
+  ).length,
+)
+
+const activeSelectFiltersCount = computed(() =>
+  [filters.value.status, filters.value.priority, filters.value.categoryId].filter(
     (v) => v !== '' && v !== undefined,
   ).length,
 )
@@ -88,17 +103,28 @@ function patchFilters<K extends keyof TaskFiltersValue>(key: K, value: TaskFilte
 function clearFilters() {
   emit('clear')
 }
+
+function clearSelectFilters() {
+  emit('update:modelValue', {
+    ...filters.value,
+    status: '',
+    priority: '',
+    categoryId: '',
+  })
+  mobileFiltersOpen.value = false
+}
 </script>
 
 <template>
   <section class="grid gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+    <!-- Desktop: tudo inline -->
     <div class="hidden items-center gap-2.5 lg:grid lg:grid-cols-[1fr_auto_auto_auto_auto]">
       <div class="search-wrapper relative">
         <BaseInput
           :disabled="loading"
           :model-value="filters.search ?? ''"
           aria-label="Buscar tarefas"
-          placeholder="Buscar por titulo ou descricao"
+          placeholder="Buscar por título ou descrição"
           @update:modelValue="patchFilters('search', $event)"
         />
         <Search
@@ -112,7 +138,7 @@ function clearFilters() {
         :model-value="filters.status ?? ''"
         :options="statusOptions"
         class="w-44"
-        placeholder="Situacao"
+        placeholder="Situação"
         @update:modelValue="patchFilters('status', $event as TaskStatus | '')"
       />
 
@@ -146,13 +172,14 @@ function clearFilters() {
       </BaseButton>
     </div>
 
-    <div class="grid gap-3 lg:hidden">
-      <div class="search-wrapper relative">
+    <!-- Mobile: search + botão filtros -->
+    <div class="flex items-center gap-2 lg:hidden">
+      <div class="search-wrapper relative flex-1">
         <BaseInput
           :disabled="loading"
           :model-value="filters.search ?? ''"
           aria-label="Buscar tarefas"
-          placeholder="Buscar por titulo ou descricao"
+          placeholder="Buscar por título ou descrição"
           @update:modelValue="patchFilters('search', $event)"
         />
         <Search
@@ -161,60 +188,101 @@ function clearFilters() {
         />
       </div>
 
-      <div class="grid grid-cols-1 gap-2.5 min-[600px]:grid-cols-3">
-        <BaseSelect
-          :disabled="loading"
-          :model-value="filters.status ?? ''"
-          :options="statusOptions"
-          placeholder="Situacao"
-          @update:modelValue="patchFilters('status', $event as TaskStatus | '')"
-        />
-
-        <BaseSelect
-          :disabled="loading"
-          :model-value="filters.priority ?? ''"
-          :options="priorityOptions"
-          placeholder="Prioridade"
-          @update:modelValue="patchFilters('priority', $event as TaskPriority | '')"
-        />
-
-        <BaseSelect
-          :disabled="loading"
-          :model-value="filters.categoryId ?? ''"
-          :options="categoryOptions"
-          placeholder="Categoria"
-          value-mode="number"
-          @update:modelValue="patchFilters('categoryId', $event as number | '')"
-        />
-      </div>
-
-      <div class="flex justify-end">
-        <BaseButton
-          :disabled="!hasActiveFilters"
-          size="sm"
-          variant="secondary"
-          @click="clearFilters"
+      <BaseButton
+        class="relative shrink-0"
+        size="sm"
+        variant="secondary"
+        @click="mobileFiltersOpen = true"
+      >
+        <Filter :size="14"/>
+        Filtros
+        <span
+          v-if="activeSelectFiltersCount > 0"
+          class="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[0.625rem] font-bold text-white"
         >
-          <X :size="14"/>
-          Limpar filtros
-        </BaseButton>
-      </div>
+          {{ activeSelectFiltersCount }}
+        </span>
+      </BaseButton>
+
+      <BaseButton
+        v-if="hasActiveFilters"
+        size="sm"
+        variant="ghost"
+        @click="clearFilters"
+      >
+        <X :size="14"/>
+      </BaseButton>
     </div>
 
-    <!-- Results count bar -->
+    <!-- Filter state bar -->
     <div class="-mx-3 -mb-3 flex items-center gap-2 border-t border-neutral-100 bg-neutral-50/50 px-4 py-2">
-      <span class="text-[0.78rem] font-medium text-neutral-500">
-        {{ totalResults }} {{ totalResults === 1 ? 'tarefa encontrada' : 'tarefas encontradas' }}
-        <span v-if="hasActiveFilters" class="text-neutral-400"> com filtros ativos</span>
+      <span class="text-[0.8125rem] font-medium text-neutral-500">
+        {{ hasActiveFilters ? 'Filtros ativos aplicados à listagem.' : 'Nenhum filtro adicional aplicado.' }}
       </span>
       <span
         v-if="hasActiveFilters"
-        class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[0.6rem] font-bold text-white"
+        class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[0.625rem] font-bold text-white"
       >
         {{ activeFiltersCount }}
       </span>
     </div>
   </section>
+
+  <!-- Mobile filters modal -->
+  <BaseModal
+    :model-value="mobileFiltersOpen"
+    size="sm"
+    title="Filtros"
+    description="Refine a lista de tarefas."
+    @update:model-value="mobileFiltersOpen = $event"
+  >
+    <div class="grid gap-4">
+      <BaseSelect
+        :disabled="loading"
+        :model-value="filters.status ?? ''"
+        :options="statusOptions"
+        label="Situação"
+        placeholder="Situação"
+        @update:modelValue="patchFilters('status', $event as TaskStatus | '')"
+      />
+
+      <BaseSelect
+        :disabled="loading"
+        :model-value="filters.priority ?? ''"
+        :options="priorityOptions"
+        label="Prioridade"
+        placeholder="Prioridade"
+        @update:modelValue="patchFilters('priority', $event as TaskPriority | '')"
+      />
+
+      <BaseSelect
+        :disabled="loading"
+        :model-value="filters.categoryId ?? ''"
+        :options="categoryOptions"
+        label="Categoria"
+        placeholder="Categoria"
+        value-mode="number"
+        @update:modelValue="patchFilters('categoryId', $event as number | '')"
+      />
+
+      <div class="flex gap-3 pt-2">
+        <BaseButton
+          :disabled="!hasActiveSelectFilters"
+          class="flex-1"
+          variant="secondary"
+          @click="clearSelectFilters"
+        >
+          Limpar filtros
+        </BaseButton>
+        <BaseButton
+          class="flex-1"
+          @click="mobileFiltersOpen = false"
+        >
+          Aplicar
+        </BaseButton>
+      </div>
+    </div>
+  </BaseModal>
 </template>
 
 <style scoped>

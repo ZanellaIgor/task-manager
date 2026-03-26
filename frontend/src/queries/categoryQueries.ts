@@ -46,7 +46,7 @@ export function useCategory(id: MaybeRefOrGetter<number | null | undefined>) {
 }
 
 function invalidateCategories(queryClient: ReturnType<typeof useQueryClient>) {
-    return Promise.all([queryClient.invalidateQueries({queryKey: categoryKeys.all})])
+    return queryClient.invalidateQueries({queryKey: categoryKeys.all})
 }
 
 export function useCreateCategory() {
@@ -68,20 +68,6 @@ export function useUpdateCategory() {
         onSuccess: async (_category, variables) => {
             await Promise.all([
                 queryClient.invalidateQueries({queryKey: categoryKeys.detail(variables.id)}),
-                invalidateCategories(queryClient),
-            ])
-        },
-    })
-}
-
-export function useDeactivateCategory() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: (id: number) => categoryService.deactivate(id),
-        onSuccess: async (_category, id) => {
-            await Promise.all([
-                queryClient.invalidateQueries({queryKey: categoryKeys.detail(id)}),
                 invalidateCategories(queryClient),
             ])
         },

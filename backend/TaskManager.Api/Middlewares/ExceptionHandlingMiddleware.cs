@@ -9,11 +9,16 @@ public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly IHostEnvironment _environment;
+    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next, IHostEnvironment environment)
+    public ExceptionHandlingMiddleware(
+        RequestDelegate next,
+        IHostEnvironment environment,
+        ILogger<ExceptionHandlingMiddleware> logger)
     {
         _next = next;
         _environment = environment;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -24,26 +29,35 @@ public class ExceptionHandlingMiddleware
         }
         catch (NotFoundException ex)
         {
+            _logger.LogWarning(ex, "Recurso não encontrado para {Method} {Path}. TraceId: {TraceId}",
+                context.Request.Method, context.Request.Path, context.TraceIdentifier);
+
             var problemDetails = ProblemDetailsExtensions.CreateProblemDetails(
                 context,
                 StatusCodes.Status404NotFound,
-                "Resource not found.",
+                "Recurso não encontrado.",
                 ex.Message,
                 "resource_not_found");
             await WriteProblemDetailsAsync(context, problemDetails);
         }
         catch (BusinessException ex)
         {
+            _logger.LogWarning(ex, "Regra de negócio violada em {Method} {Path}. TraceId: {TraceId}",
+                context.Request.Method, context.Request.Path, context.TraceIdentifier);
+
             var problemDetails = ProblemDetailsExtensions.CreateProblemDetails(
                 context,
                 StatusCodes.Status422UnprocessableEntity,
-                "Business rule violation.",
+                "Violação de regra de negócio.",
                 ex.Message,
                 "business_rule_violation");
             await WriteProblemDetailsAsync(context, problemDetails);
         }
         catch (ValidationException ex)
         {
+            _logger.LogWarning(ex, "Falha de validação em {Method} {Path}. TraceId: {TraceId}",
+                context.Request.Method, context.Request.Path, context.TraceIdentifier);
+
             var errors = ex.Errors
                 .GroupBy(error => string.IsNullOrWhiteSpace(error.PropertyName) ? "request" : error.PropertyName)
                 .ToDictionary(group => group.Key, group => group.Select(error => error.ErrorMessage).ToArray());
@@ -53,11 +67,14 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Erro inesperado em {Method} {Path}. TraceId: {TraceId}",
+                context.Request.Method, context.Request.Path, context.TraceIdentifier);
+
             var problemDetails = ProblemDetailsExtensions.CreateProblemDetails(
                 context,
                 StatusCodes.Status500InternalServerError,
-                "Unexpected error.",
-                "An unexpected error occurred.",
+                "Erro inesperado.",
+                "Ocorreu um erro inesperado.",
                 "unexpected_error");
 
             if (_environment.IsDevelopment())
@@ -72,7 +89,7 @@ public class ExceptionHandlingMiddleware
     private static async Task WriteProblemDetailsAsync(HttpContext context, ProblemDetails problemDetails)
     {
         context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
-        context.Response.ContentType = "application/json";
+        context.Response.ContentType = "application/problem+json";
         await context.Response.WriteAsJsonAsync(problemDetails);
     }
 }

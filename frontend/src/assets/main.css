@@ -6,12 +6,26 @@
     --color-primary-dark: #1239a8;
     --color-primary-light: #3b6fff;
     --color-primary-soft: #eef2ff;
+    --color-primary-soft-hover: #dfe7ff;
 
     /* Semantic */
     --color-accent: #06b6d4;
     --color-success: #10b981;
+    --color-success-soft: #ecfdf5;
+    --color-success-text: #047857;
+    --color-success-border: #a7f3d0;
     --color-warning: #f59e0b;
+    --color-warning-soft: #fffbeb;
+    --color-warning-text: #b45309;
+    --color-warning-border: #fcd34d;
     --color-danger: #ef4444;
+    --color-danger-soft: #fef2f2;
+    --color-danger-text: #dc2626;
+    --color-danger-border: #fca5a5;
+    --color-info: #06b6d4;
+    --color-info-soft: #ecfeff;
+    --color-info-text: #0e7490;
+    --color-info-border: #a5f3fc;
 
     /* Neutral scale */
     --color-neutral-900: #0f172a;
@@ -144,6 +158,12 @@
         text-decoration: none;
     }
 
+    a:focus-visible {
+        outline: 3px solid rgba(59, 111, 255, 0.2);
+        outline-offset: 2px;
+        border-radius: 0.25rem;
+    }
+
     ::selection {
         background: rgba(27, 79, 216, 0.15);
         color: var(--color-primary-dark);
@@ -167,6 +187,15 @@
     }
     .list-move {
         transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }
 

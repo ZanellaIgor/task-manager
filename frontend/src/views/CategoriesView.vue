@@ -2,7 +2,7 @@
 import {computed, onBeforeUnmount, ref} from 'vue'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRoute, useRouter} from 'vue-router'
-import {FolderX, Plus, RefreshCcw} from 'lucide-vue-next'
+import {FolderX, Plus, RefreshCcw, Tag} from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import PageLayout from '@/components/layout/PageLayout.vue'
@@ -30,7 +30,12 @@ const router = useRouter()
 const sidebarOpen = ref(false)
 
 const search = computed(() => readQueryString(route.query, 'search') ?? '')
-const showInactive = computed(() => readQueryBoolean(route.query, 'showInactive', true))
+const showInactive = computed(() => readQueryBoolean(route.query, 'showInactive', false))
+const categoriesSectionDescription = computed(() => (
+  showInactive.value
+    ? 'Acompanhe categorias ativas e arquivadas. As ativas continuam disponíveis nos fluxos de novas tarefas.'
+    : 'Somente categorias ativas estão visíveis. Elas alimentam os filtros e o cadastro de novas tarefas.'
+))
 const categoryFilters = computed<CategoryFilters>(() => ({
   page: readQueryNumber(route.query, 'page', 1),
   pageSize: PAGE_SIZE,
@@ -67,7 +72,7 @@ function buildQuery(nextSearch: string, nextShowInactive: boolean, page = 1) {
 
   withQueryValue(query, 'page', page > 1 ? page : undefined)
   withQueryValue(query, 'search', nextSearch.trim() || undefined)
-  withQueryValue(query, 'showInactive', nextShowInactive ? undefined : false)
+  withQueryValue(query, 'showInactive', nextShowInactive ? true : undefined)
 
   return query
 }
@@ -92,10 +97,28 @@ async function goToPage(page: number) {
 onBeforeUnmount(() => {
   clearTimeout(searchTimeout)
 })
+
+function formatDate(value?: string) {
+  if (!value) {
+    return 'Sem registro'
+  }
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date)
+}
 </script>
 
 <template>
-  <PageLayout>
+  <PageLayout lock-viewport>
     <template #sidebar>
       <AppSidebar :model-value="sidebarOpen" @update:model-value="sidebarOpen = $event" />
     </template>
@@ -121,25 +144,19 @@ onBeforeUnmount(() => {
       </AppHeader>
     </template>
 
-    <section class="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
-      <div class="relative flex-1">
-        <BaseInput
-          :model-value="search"
-          placeholder="Buscar por nome ou descrição…"
-          @update:model-value="updateSearch"
-        />
-      </div>
-      <BaseButton variant="secondary" @click="toggleInactiveFilter">
-        {{ showInactive ? 'Ocultar inativas' : 'Mostrar inativas' }}
-      </BaseButton>
-    </section>
-
-    <section class="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-      <SectionHeader
-        :description="`${totalItems} ${totalItems === 1 ? 'item catalogado' : 'itens catalogados'}. Categorias ativas alimentam os filtros das tarefas.`"
-        class="border-b border-neutral-100 px-6 py-4"
-        title="Listagem de Categorias"
-      />
+    <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
+      <section class="flex shrink-0 flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+          <BaseInput
+            :model-value="search"
+            placeholder="Buscar por nome ou descrição…"
+            @update:model-value="updateSearch"
+          />
+        </div>
+        <BaseButton class="w-full sm:w-auto" variant="secondary" @click="toggleInactiveFilter">
+          {{ showInactive ? 'Ocultar inativas' : 'Mostrar inativas' }}
+        </BaseButton>
+      </section>
 
       <ErrorState
         v-if="isError"
@@ -150,33 +167,63 @@ onBeforeUnmount(() => {
         @retry="refetch"
       />
 
-      <div v-else-if="isLoading" class="space-y-5 px-6 py-5">
-        <div v-for="index in 5" :key="index" class="flex flex-col gap-3">
-          <div class="flex items-start justify-between">
-            <div class="flex-1 space-y-2">
-              <BaseSkeleton height="1.25rem" width="30%" rounded="md" />
-              <BaseSkeleton height="0.875rem" width="60%" rounded="sm" />
-            </div>
-            <BaseSkeleton height="1.5rem" width="4rem" rounded="full" />
-          </div>
-          <div class="flex gap-2">
-            <BaseSkeleton height="2.25rem" width="5rem" rounded="lg" />
-            <BaseSkeleton height="2.25rem" width="5rem" rounded="lg" />
-          </div>
-          <div v-if="index < 5" class="border-b border-neutral-50 pt-2" />
-        </div>
-      </div>
+      <section
+        v-else-if="isLoading"
+        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
+      >
+        <SectionHeader
+          :description="categoriesSectionDescription"
+          class="shrink-0 border-b border-neutral-100 px-6 py-4"
+          title="Listagem de Categorias"
+        />
 
-      <div v-else-if="categoriesList.length">
-        <!-- Desktop Table View -->
-        <div class="hidden overflow-x-auto md:block">
-          <table class="min-w-full">
-            <thead>
-              <tr class="bg-neutral-50 text-left text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-neutral-400">
-                <th class="px-6 py-2.5">Categoria</th>
-                <th class="px-6 py-2.5">Descrição</th>
-                <th class="px-6 py-2.5">Status</th>
-                <th class="px-6 py-2.5 text-right">Ações</th>
+        <div class="grid auto-rows-max gap-4 overflow-y-auto p-4 sm:p-6 lg:grid-cols-2 2xl:grid-cols-3">
+          <article
+            v-for="index in PAGE_SIZE"
+            :key="index"
+            class="overflow-hidden rounded-[1.65rem] border border-white/70 bg-white p-5 shadow-card"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <BaseSkeleton height="3rem" width="3rem" rounded="2xl" />
+              <BaseSkeleton height="1.75rem" width="5.5rem" rounded="full" />
+            </div>
+            <div class="mt-5 space-y-3">
+              <BaseSkeleton height="0.75rem" width="28%" rounded="md" />
+              <BaseSkeleton height="1.25rem" width="52%" rounded="md" />
+              <BaseSkeleton height="0.9rem" width="100%" rounded="sm" />
+              <BaseSkeleton height="0.9rem" width="82%" rounded="sm" />
+            </div>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <BaseSkeleton height="4.75rem" width="100%" rounded="2xl" />
+              <BaseSkeleton height="4.75rem" width="100%" rounded="2xl" />
+            </div>
+            <div class="mt-5 flex gap-2 border-t border-neutral-100 pt-4">
+              <BaseSkeleton height="2.25rem" width="100%" rounded="lg" />
+              <BaseSkeleton height="2.25rem" width="100%" rounded="lg" />
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section
+        v-else-if="categoriesList.length"
+        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
+      >
+        <SectionHeader
+          :description="categoriesSectionDescription"
+          class="shrink-0 border-b border-neutral-100 px-6 py-4"
+          title="Listagem de Categorias"
+        />
+
+        <div class="hidden min-h-0 flex-1 overflow-auto px-4 py-4 md:block sm:px-6">
+          <table class="min-w-full border-separate border-spacing-y-3">
+            <thead class="sticky top-0 z-10 bg-white">
+              <tr class="text-left text-[0.6875rem] font-bold uppercase tracking-[0.18em] text-neutral-400">
+                <th class="px-4 pb-1">Categoria</th>
+                <th class="px-4 pb-1">Descrição</th>
+                <th class="px-4 pb-1">Atualizada</th>
+                <th class="px-4 pb-1">Status</th>
+                <th class="px-4 pb-1 text-right">Ações</th>
               </tr>
             </thead>
             <TransitionGroup
@@ -186,15 +233,42 @@ onBeforeUnmount(() => {
               <tr
                 v-for="category in categoriesList"
                 :key="category.id"
-                class="border-b border-neutral-100 last:border-0 transition-colors duration-100 hover:bg-neutral-50"
+                class="group"
               >
-                <td class="px-6 py-3">
-                  <p class="text-[0.9rem] font-semibold text-neutral-900">{{ category.name }}</p>
+                <td class="border-y border-l border-neutral-200 bg-neutral-50 px-4 py-4 align-top first:rounded-l-[1.25rem] group-hover:border-neutral-300 group-hover:bg-white">
+                  <div class="flex items-start gap-3">
+                    <div
+                      :class="category.isActive
+                        ? 'bg-primary-soft text-primary ring-primary/10'
+                        : 'bg-neutral-100 text-neutral-500 ring-neutral-200/80'"
+                      class="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl ring-1"
+                    >
+                      <Tag class="h-4 w-4" />
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-neutral-400">
+                        {{ category.isActive ? 'Disponível' : 'Arquivada' }}
+                      </p>
+                      <p class="mt-1 text-[0.975rem] font-semibold tracking-[-0.02em] text-neutral-900">
+                        {{ category.name }}
+                      </p>
+                    </div>
+                  </div>
                 </td>
-                <td class="px-6 py-3 text-[0.875rem] text-neutral-500">
-                  {{ category.description || '—' }}
+                <td class="border-y border-neutral-200 bg-neutral-50 px-4 py-4 align-top group-hover:border-neutral-300 group-hover:bg-white">
+                  <p class="max-w-xl text-sm leading-relaxed text-neutral-500">
+                    {{ category.description || 'Sem descrição cadastrada para esta categoria.' }}
+                  </p>
                 </td>
-                <td class="px-6 py-3">
+                <td class="border-y border-neutral-200 bg-neutral-50 px-4 py-4 align-top group-hover:border-neutral-300 group-hover:bg-white">
+                  <p class="text-sm font-semibold text-neutral-900">
+                    {{ formatDate(category.updatedAt) }}
+                  </p>
+                  <p class="mt-1 text-[0.8125rem] text-neutral-400">
+                    Criada em {{ formatDate(category.createdAt) }}
+                  </p>
+                </td>
+                <td class="border-y border-neutral-200 bg-neutral-50 px-4 py-4 align-top group-hover:border-neutral-300 group-hover:bg-white">
                   <BaseBadge
                     :variant="category.isActive ? 'success' : 'neutral'"
                     rounded="full"
@@ -203,7 +277,7 @@ onBeforeUnmount(() => {
                     {{ category.isActive ? 'Ativa' : 'Inativa' }}
                   </BaseBadge>
                 </td>
-                <td class="px-6 py-3">
+                <td class="border-y border-r border-neutral-200 bg-neutral-50 px-4 py-4 align-top last:rounded-r-[1.25rem] group-hover:border-neutral-300 group-hover:bg-white">
                   <div class="flex justify-end gap-2">
                     <BaseButton
                       :aria-label="`Editar categoria ${category.name}`"
@@ -216,8 +290,8 @@ onBeforeUnmount(() => {
                     <BaseButton
                       :aria-label="category.isActive ? `Desativar categoria ${category.name}` : `Ativar categoria ${category.name}`"
                       :class="category.isActive
-                        ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                        : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'"
+                        ? 'border-warning-border bg-warning-soft text-warning-text hover:brightness-95'
+                        : 'border-success-border bg-success-soft text-success-text hover:brightness-95'"
                       :disabled="toggleCategoryStatus.isPending.value"
                       :loading="toggleCategoryStatus.isPending.value"
                       size="sm"
@@ -233,82 +307,130 @@ onBeforeUnmount(() => {
           </table>
         </div>
 
-        <!-- Mobile Cards View -->
-        <TransitionGroup
-          class="grid gap-4 p-4 md:hidden"
-          name="list"
-          tag="div"
-        >
-          <article
-            v-for="category in categoriesList"
-            :key="category.id"
-            class="flex flex-col gap-3 rounded-2xl border border-neutral-100 bg-neutral-50/50 p-4 transition-all hover:bg-white hover:shadow-sm"
+        <div class="min-h-0 flex-1 overflow-y-auto p-4 md:hidden">
+          <TransitionGroup
+            class="grid auto-rows-max gap-4"
+            name="list"
+            tag="div"
           >
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <h3 class="font-bold text-neutral-900">{{ category.name }}</h3>
-                <p class="mt-1 text-[0.82rem] leading-relaxed text-neutral-500">
-                  {{ category.description || 'Sem descrição' }}
-                </p>
+            <article
+              v-for="category in categoriesList"
+              :key="category.id"
+              :class="category.isActive ? 'hover:border-primary/20' : 'hover:border-neutral-300'"
+              class="group relative overflow-hidden rounded-[1.5rem] border border-neutral-200 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_8px_24px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(15,23,42,0.12)]"
+            >
+              <div
+                :class="category.isActive ? 'from-primary-light to-accent' : 'from-neutral-300 to-neutral-500'"
+                class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r"
+              />
+
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3">
+                  <div
+                    :class="category.isActive
+                      ? 'bg-primary-soft text-primary'
+                      : 'bg-neutral-100 text-neutral-500'"
+                    class="flex size-11 shrink-0 items-center justify-center rounded-2xl"
+                  >
+                    <Tag class="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <p class="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-neutral-400">
+                      {{ category.isActive ? 'Disponível no fluxo' : 'Categoria arquivada' }}
+                    </p>
+                    <h3 class="mt-1 text-[1rem] font-semibold tracking-[-0.02em] text-neutral-900">
+                      {{ category.name }}
+                    </h3>
+                  </div>
+                </div>
+                <BaseBadge
+                  :variant="category.isActive ? 'success' : 'neutral'"
+                  rounded="full"
+                  size="sm"
+                >
+                  {{ category.isActive ? 'Ativa' : 'Inativa' }}
+                </BaseBadge>
               </div>
-              <BaseBadge
-                :variant="category.isActive ? 'success' : 'neutral'"
-                rounded="full"
-                size="sm"
-              >
-                {{ category.isActive ? 'Ativa' : 'Inativa' }}
-              </BaseBadge>
-            </div>
-            <div class="flex gap-2 border-t border-neutral-100 pt-3">
-              <BaseButton
-                class="flex-1"
-                size="sm"
-                variant="secondary"
-                @click="store.openEdit(category.id)"
-              >
-                Editar
-              </BaseButton>
-              <BaseButton
-                :class="category.isActive
-                  ? 'border-amber-200 bg-amber-50 text-amber-700'
-                  : 'border-emerald-200 bg-emerald-50 text-emerald-700'"
-                :disabled="toggleCategoryStatus.isPending.value"
-                :loading="toggleCategoryStatus.isPending.value"
-                class="flex-1"
-                size="sm"
-                variant="ghost"
-                @click="confirmToggle(category)"
-              >
-                {{ category.isActive ? 'Desativar' : 'Ativar' }}
-              </BaseButton>
-            </div>
-          </article>
-        </TransitionGroup>
-      </div>
 
-      <EmptyState
+              <p class="mt-4 rounded-2xl border border-neutral-100 bg-neutral-50 px-3.5 py-3 text-[0.875rem] leading-relaxed text-neutral-500">
+                {{ category.description || 'Sem descrição cadastrada para esta categoria.' }}
+              </p>
+
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <div class="rounded-2xl border border-neutral-100 bg-white px-3.5 py-3">
+                  <p class="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-neutral-400">
+                    Criada em
+                  </p>
+                  <p class="mt-1 text-[0.875rem] font-semibold text-neutral-900">
+                    {{ formatDate(category.createdAt) }}
+                  </p>
+                </div>
+                <div class="rounded-2xl border border-neutral-100 bg-white px-3.5 py-3">
+                  <p class="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-neutral-400">
+                    Atualizada
+                  </p>
+                  <p class="mt-1 text-[0.875rem] font-semibold text-neutral-900">
+                    {{ formatDate(category.updatedAt) }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-4 flex gap-2 border-t border-neutral-100 pt-4">
+                <BaseButton
+                  class="flex-1"
+                  size="sm"
+                  variant="secondary"
+                  @click="store.openEdit(category.id)"
+                >
+                  Editar
+                </BaseButton>
+                <BaseButton
+                  :class="category.isActive
+                    ? 'border-warning-border bg-warning-soft text-warning-text hover:brightness-95'
+                    : 'border-success-border bg-success-soft text-success-text hover:brightness-95'"
+                  :disabled="toggleCategoryStatus.isPending.value"
+                  :loading="toggleCategoryStatus.isPending.value"
+                  class="flex-1"
+                  size="sm"
+                  variant="ghost"
+                  @click="confirmToggle(category)"
+                >
+                  {{ category.isActive ? 'Desativar' : 'Ativar' }}
+                </BaseButton>
+              </div>
+            </article>
+          </TransitionGroup>
+        </div>
+
+        <div class="shrink-0 border-t border-neutral-100 px-4 py-4 sm:px-6">
+          <BasePagination
+            :disabled="isFetching"
+            :page="currentPage"
+            :page-size="categoriesPage?.pageSize ?? PAGE_SIZE"
+            :total-items="totalItems"
+            :total-pages="totalPages"
+            @update:page="goToPage"
+          />
+        </div>
+      </section>
+
+      <section
         v-else
-        :icon="FolderX"
-        :description="search ? `Nenhum resultado para '${search}'.` : 'Ajuste os filtros ou crie uma nova categoria.'"
-        title="Nenhuma categoria encontrada"
+        class="flex flex-1 items-center rounded-xl border border-neutral-200 bg-white shadow-sm"
       >
-        <template v-if="search" #actions>
-          <BaseButton variant="secondary" @click="updateSearch('')">
-            Limpar busca
-          </BaseButton>
-        </template>
-      </EmptyState>
-    </section>
-
-    <BasePagination
-      v-if="!isError && !isLoading && categoriesList.length"
-      :disabled="isFetching"
-      :page="currentPage"
-      :page-size="categoriesPage?.pageSize ?? PAGE_SIZE"
-      :total-items="totalItems"
-      :total-pages="totalPages"
-      @update:page="goToPage"
-    />
+        <EmptyState
+          :icon="FolderX"
+          :description="search ? `Nenhum resultado para '${search}'.` : 'Ajuste os filtros ou crie uma nova categoria.'"
+          title="Nenhuma categoria encontrada"
+        >
+          <template v-if="search" #actions>
+            <BaseButton variant="secondary" @click="updateSearch('')">
+              Limpar busca
+            </BaseButton>
+          </template>
+        </EmptyState>
+      </section>
+    </div>
 
     <ConfirmDialog
       v-model="isConfirmingToggle"
@@ -325,7 +447,7 @@ onBeforeUnmount(() => {
     <BaseModal
       :description="
         store.editingCategoryId
-          ? 'Atualize as informacoes da categoria.'
+          ? 'Atualize as informações da categoria.'
           : 'Registre uma nova categoria para classificar tarefas.'
       "
       :model-value="store.isFormOpen"

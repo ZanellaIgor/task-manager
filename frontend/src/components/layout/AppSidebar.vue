@@ -25,7 +25,7 @@ const props = withDefaults(
       items: () => [
         {label: 'Dashboard', to: '/dashboard', description: 'Resumo operacional'},
         {label: 'Tarefas', to: '/tasks', description: 'Fila e prioridades'},
-        {label: 'Categorias', to: '/categories', description: 'Organizacao por dominio'},
+        {label: 'Categorias', to: '/categories', description: 'Organização por domínio'},
       ],
     },
 )
@@ -58,7 +58,7 @@ function close() {
     <Transition name="sidebar-fade">
       <div
           v-if="isOpen"
-          class="fixed inset-0 z-40 bg-neutral-900/[0.48] min-[721px]:hidden"
+          class="fixed inset-0 z-40 bg-neutral-900/[0.48] lg:hidden"
           @click="close"
       />
     </Transition>
@@ -66,7 +66,7 @@ function close() {
 
   <aside
       :data-open="isOpen"
-      class="sidebar fixed inset-y-0 left-0 z-50 flex w-[18.5rem] flex-col gap-[1.2rem] p-[1.1rem] bg-gradient-to-b from-primary to-primary-dark text-white shadow-[24px_0_40px_rgba(15,23,42,0.16)]"
+      class="sidebar fixed inset-y-0 left-0 z-50 flex w-[18.5rem] flex-col gap-5 p-4 bg-gradient-to-b from-primary to-primary-dark text-white shadow-[24px_0_40px_rgba(15,23,42,0.16)]"
   >
     <div class="flex items-center gap-3.5">
       <div
@@ -75,11 +75,11 @@ function close() {
         M
       </div>
       <div>
-        <p class="text-[1.15rem] font-bold tracking-[-0.01em]">{{ brand }}</p>
-        <p class="mt-0.5 text-[0.84rem] leading-[1.4] text-white/[0.82]">{{ tagline }}</p>
+        <p class="text-lg font-bold tracking-[-0.01em]">{{ brand }}</p>
+        <p class="mt-0.5 text-[0.8125rem] leading-[1.4] text-white/[0.82]">{{ tagline }}</p>
       </div>
       <BaseButton
-          class="ml-auto text-white min-[721px]:hidden"
+          class="ml-auto text-white lg:hidden"
           size="sm"
           variant="ghost"
           @click="close"
@@ -88,7 +88,7 @@ function close() {
       </BaseButton>
     </div>
 
-    <nav aria-label="Main navigation" class="flex flex-col gap-[0.55rem]">
+    <nav aria-label="Main navigation" class="flex flex-col gap-2">
       <RouterLink
           v-for="(item, index) in items"
           :key="item.to"
@@ -99,7 +99,7 @@ function close() {
       >
         <button
             :class="isActive && 'bg-white/[0.16] border-white/[0.16]'"
-            class="w-full grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 px-[0.95rem] py-[0.9rem] border border-transparent rounded-2xl bg-white/[0.08] text-left text-inherit cursor-pointer transition-all duration-200 ease-out hover:translate-x-0.5 hover:bg-white/[0.14]"
+            class="w-full grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 px-3.5 py-3 border border-transparent rounded-2xl bg-white/[0.08] text-left text-inherit cursor-pointer transition-all duration-200 ease-out hover:translate-x-0.5 hover:bg-white/[0.14]"
             type="button"
             @click="navigate(); close()"
         >
@@ -109,10 +109,10 @@ function close() {
               class="shrink-0"
           />
           <span class="flex flex-col gap-0.5 min-w-0">
-            <strong class="text-[0.95rem]">{{ item.label }}</strong>
+            <strong class="text-[0.9375rem]">{{ item.label }}</strong>
             <small
                 v-if="item.description"
-                class="text-[0.8rem] leading-[1.35] text-white/[0.82]"
+                class="text-[0.8125rem] leading-[1.35] text-white/[0.82]"
             >
               {{ item.description }}
             </small>
@@ -130,12 +130,12 @@ function close() {
 
     <div class="mt-auto px-1">
       <div class="flex items-center gap-2 px-3 py-3 rounded-xl bg-white/[0.08]">
-        <div class="grid size-7 shrink-0 place-items-center rounded-lg bg-white/[0.16] text-[0.7rem] font-bold">
+        <div class="grid size-7 shrink-0 place-items-center rounded-lg bg-white/[0.16] text-xs font-bold">
           TM
         </div>
         <div class="min-w-0">
-          <p class="text-[0.8rem] font-semibold leading-none text-white truncate">{{ brand }}</p>
-          <p class="mt-0.5 text-[0.72rem] text-white/[0.55]">v1.0.0</p>
+          <p class="text-[0.8125rem] font-semibold leading-none text-white truncate">{{ brand }}</p>
+          <p class="mt-0.5 text-xs text-white/[0.55]">v1.0.0</p>
         </div>
       </div>
     </div>
@@ -153,7 +153,7 @@ function close() {
   opacity: 0;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 1023px) {
   .sidebar {
     transform: translateX(-102%);
     transition: transform 220ms ease;
